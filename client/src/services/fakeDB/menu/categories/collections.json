@@ -1,0 +1,6 @@
+[
+  { "name": "Main Dish", "value": "main" },
+  { "name": "Side Dish", "value": "side" },
+  { "name": "Dessert", "value": "dessert" },
+  { "name": "Drinks", "value": "drinks" }
+]

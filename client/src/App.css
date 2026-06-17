@@ -1,0 +1,22 @@
+/* Scrollbar track (yung background) */
+::-webkit-scrollbar {
+  width: 7px; /* kapal ng scrollbar */
+  height: 8px; /* taas kapag horizontal scrollbar */
+}
+
+/* Scrollbar track background */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 8px;
+}
+
+/* Scrollbar thumb (yung galaw na bar) */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 8px;
+}
+
+/* Hover effect sa thumb */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
