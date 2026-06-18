@@ -13,22 +13,17 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { capitalize } from "lodash";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { FUEL_CHECKER } from "@/services/redux/slices/assets/stocks";
+
 import { Role } from "@/services/fakeDB";
 
 export default function Platforms() {
-  const { auth, token } = useSelector(({ auth }) => auth);
-  const dispatch = useDispatch();
+  const { auth } = useSelector(({ auth }) => auth);
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean); // ["platforms", "students", "list"]
   const lastSegment = pathSegments[pathSegments.length - 1]; //
 
-  useEffect(() => {
-    dispatch(FUEL_CHECKER({ token }));
-  }, [token]);
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />

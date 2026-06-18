@@ -1,10 +1,10 @@
-import amount from "./amount";
 import date from "./date";
-import mobile from "./mobile";
+import fullName from "./fullName";
+import capitalize from "./capitalize";
 const Formatter = {
-  amount,
   date,
-  mobile,
+  fullName,
+  capitalize,
 };
 
 export default Formatter;

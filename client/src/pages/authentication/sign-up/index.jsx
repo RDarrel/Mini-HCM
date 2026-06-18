@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -8,19 +9,50 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useDispatch, useSelector } from "react-redux";
-import { LOGIN } from "@/services/redux/slices/persons/auth";
+import { LOGIN } from "@/services/redux/slices/auth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";
-
+const getPassError = (password, confirmPassword) => {
+  if (password !== confirmPassword) return "Passwords do not match.";
+  if (password.length < 8)
+    return "Password must be at least 8 characters long.";
+  if (!/[A-Z]/.test(password))
+    return "Password must contain at least one uppercase letter.";
+  if (!/[a-z]/.test(password))
+    return "Password must contain at least one lowercase letter.";
+  if (!/[0-9]/.test(password))
+    return "Password must contain at least one number.";
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password))
+    return "Password must contain at least one special character.";
+  return "";
+};
 export default function LoginForm({ setIsLogin = () => {} }) {
   const { isLoading } = useSelector(({ auth }) => auth),
+    [passWarning, setPassWarning] = useState(""),
     dispatch = useDispatch(),
     navigate = useNavigate();
 
   const handleLogin = (e) => {
     e.preventDefault();
     const { email, password, lname, fname, confirmPassword } = e.target;
+
+    //password validation
+    if (getPassError(password.value, confirmPassword.value))
+      return setPassWarning(
+        getPassError(password.value, confirmPassword.value),
+      );
+
+    const data = {
+      email: email.value,
+      password: password.value,
+      fullName: {
+        fname: fname.value,
+        lname: lname.value,
+      },
+    };
+    //Reset the form
+    e.target.reset();
   };
   return (
     <form onSubmit={handleLogin}>
@@ -65,6 +97,9 @@ export default function LoginForm({ setIsLogin = () => {} }) {
             />
           </Field>
         </div>
+        <FieldDescription className="font-semibold text-destructive -mt-2 ">
+          {passWarning}
+        </FieldDescription>
         <small className="text-xs text-muted-foreground">
           A strong password must contain lowercase and UPPERCASE letters,
           numbers and character symbols.

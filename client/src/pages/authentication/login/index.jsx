@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useDispatch, useSelector } from "react-redux";
-import { LOGIN } from "@/services/redux/slices/persons/auth";
+import { LOGIN } from "@/services/redux/slices/auth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";

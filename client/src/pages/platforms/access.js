@@ -1,8 +1,6 @@
-import ADMINISTRATOR from "./admininistrator/access";
-import STOCKMAN from "./stockman/access";
+import EMPLOYEE from "./employee/access";
 const access = {
-  1: ADMINISTRATOR,
-  4: STOCKMAN,
+  employee: EMPLOYEE,
 };
 
 export default access;
