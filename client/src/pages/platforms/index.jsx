@@ -16,8 +16,6 @@ import { capitalize } from "lodash";
 import { useSelector } from "react-redux";
 import { Outlet, useLocation } from "react-router-dom";
 
-import { Role } from "@/services/fakeDB";
-
 export default function Platforms() {
   const { auth } = useSelector(({ auth }) => auth);
   const location = useLocation();
@@ -34,9 +32,7 @@ export default function Platforms() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    {Role.getLabel(auth?.role)}
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="#">{auth?.role}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
