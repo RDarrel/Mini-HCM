@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useDispatch, useSelector } from "react-redux";
-import { LOGIN } from "@/services/redux/slices/auth";
+import { REGISTER } from "@/services/redux/slices/auth";
+import { getTimezone } from "@/services/utilities";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";
 const getPassError = (password, confirmPassword) => {
   if (password !== confirmPassword) return "Passwords do not match.";
@@ -30,8 +30,7 @@ const getPassError = (password, confirmPassword) => {
 export default function LoginForm({ setIsLogin = () => {} }) {
   const { isLoading } = useSelector(({ auth }) => auth),
     [passWarning, setPassWarning] = useState(""),
-    dispatch = useDispatch(),
-    navigate = useNavigate();
+    dispatch = useDispatch();
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -46,13 +45,28 @@ export default function LoginForm({ setIsLogin = () => {} }) {
     const data = {
       email: email.value,
       password: password.value,
-      fullName: {
+      name: {
         fname: fname.value,
         lname: lname.value,
       },
+      timezone: getTimezone(),
     };
-    //Reset the form
-    e.target.reset();
+
+    dispatch(REGISTER(data))
+      .unwrap()
+      .then(() => {
+        setIsLogin(true);
+        toast.success("Account created successfully", {
+          duration: 1000,
+        });
+        //Reset the form
+        e.target.reset();
+      })
+      .catch((error) => {
+        toast.error(error, {
+          duration: 1000,
+        });
+      });
   };
   return (
     <form onSubmit={handleLogin}>
@@ -65,7 +79,13 @@ export default function LoginForm({ setIsLogin = () => {} }) {
         </div>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="Email" required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="Email"
+            autoComplete="email"
+            required
+          />
         </Field>
         <div className="flex gap-4">
           <Field>
@@ -84,6 +104,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
               id="password"
               type="password"
               placeholder="Password"
+              autoComplete="new-password"
               required
             />
           </Field>
@@ -93,6 +114,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
               id="confirmPassword"
               type="password"
               placeholder="Confirm Password"
+              autoComplete="new-password"
               required
             />
           </Field>

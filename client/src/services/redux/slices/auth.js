@@ -1,8 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { axioKit } from "../../utilities";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../../config/firebase"; // ayusin path
+import { Formatter } from "../../utilities";
 const name = "auth",
   maxPage = Number(localStorage.getItem("maxPage")) || 5,
   token = localStorage.getItem("token") || "";
@@ -20,22 +24,54 @@ const initialState = {
   message: "",
 };
 
-export const LOGIN = createAsyncThunk(`${name}/login`, (form, thunkAPI) => {
-  try {
-    return axioKit.login(form.email, form.password);
-  } catch (error) {
-    const message =
-      (error.response && error.response.data && error.response.data.message) ||
-      error.message ||
-      error.toString();
+export const LOGIN = createAsyncThunk(
+  `${name}/login`,
+  async (form, thunkAPI) => {
+    try {
+      const { email, password } = form;
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
 
-    return thunkAPI.rejectWithValue(message);
-  }
-});
+      const user = userCredential.user;
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        return thunkAPI.rejectWithValue("User profile not found");
+      }
+
+      const userData = userSnap.data();
+
+      return {
+        uid: user.uid,
+        email: user.email,
+        ...userData,
+        createdAt: Formatter.date(userData.createdAt),
+      };
+    } catch (error) {
+      let message = "Login failed";
+      if (error.code === "auth/invalid-credential") {
+        message = "Invalid email or password";
+      } else if (error.code === "auth/user-not-found") {
+        message = "User not found";
+      } else if (error.code === "auth/wrong-password") {
+        message = "Wrong password";
+      } else {
+        message = error.message;
+      }
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
 export const REGISTER = createAsyncThunk(
   `${name}/register`,
   async (form, thunkAPI) => {
-    const { email, password, name } = form;
+    const { email, password, name, timezone } = form;
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -72,35 +108,57 @@ export const REGISTER = createAsyncThunk(
         },
       };
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
+      let message = "Registration failed";
+
+      if (
+        error.code === "auth/email-already-in-use" ||
+        error.message?.includes("EMAIL_EXISTS")
+      ) {
+        message = "Email already exists";
+      } else if (error.code === "auth/invalid-email") {
+        message = "Invalid email address";
+      } else if (error.code === "auth/weak-password") {
+        message = "Password should be at least 6 characters";
+      } else {
+        message = error.message;
+      }
 
       return thunkAPI.rejectWithValue(message);
     }
   },
 );
-export const VALIDATEREFRESH = createAsyncThunk(
-  `${name}/validateRefresh`,
-  (token, thunkAPI) => {
+export const RESTORE_SESSION = createAsyncThunk(
+  `${name}/restoreSession`,
+  async (uid, thunkAPI) => {
     try {
-      return axioKit.validateRefresh(token);
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
+      const snapshot = await getDoc(doc(db, "users", uid));
 
-      return thunkAPI.rejectWithValue(message);
+      if (!snapshot.exists()) {
+        return thunkAPI.rejectWithValue("User profile not found");
+      }
+
+      return {
+        uid,
+        ...snapshot.data(),
+        createdAt: Formatter.date(snapshot.data().createdAt),
+      };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
     }
   },
 );
 
+export const LOGOUT = createAsyncThunk(
+  `${name}/logout`,
+  async (_, thunkAPI) => {
+    try {
+      await signOut(auth);
+      return true;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  },
+);
 export const reduxSlice = createSlice({
   name,
   initialState,
@@ -112,9 +170,10 @@ export const reduxSlice = createSlice({
     SETROUTE: (state, data) => {
       state.route = data.payload;
     },
+
     RESET: (state, data) => {
-      state.searchFound = null;
       state.isSuccess = false;
+      state.auth = {};
       state.message = "";
     },
   },
@@ -126,13 +185,7 @@ export const reduxSlice = createSlice({
         state.message = "";
       })
       .addCase(LOGIN.fulfilled, (state, action) => {
-        const { success, payload } = action.payload;
-        const { token, user } = payload;
-        state.token = token;
-        state.email = user.email;
-        state.auth = user;
-        state.id = user._id;
-        state.message = success;
+        state.auth = action.payload;
         state.isSuccess = true;
         state.isLoading = false;
       })
@@ -142,22 +195,16 @@ export const reduxSlice = createSlice({
         state.isLoading = false;
       })
 
-      .addCase(VALIDATEREFRESH.pending, (state) => {
+      .addCase(RESTORE_SESSION.pending, (state) => {
         state.isLoading = true;
         state.isSuccess = false;
         state.message = "";
       })
-      .addCase(VALIDATEREFRESH.fulfilled, (state, action) => {
-        const { payload = {} } = action.payload;
-        const { user, information } = payload || {};
-        state.information = information;
-        state.auth = user;
-        state.role = user?.role?.name;
-
-        state.email = user?.email;
+      .addCase(RESTORE_SESSION.fulfilled, (state, action) => {
+        state.auth = action.payload;
         state.isLoading = false;
       })
-      .addCase(VALIDATEREFRESH.rejected, (state, action) => {
+      .addCase(RESTORE_SESSION.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
         state.isLoading = false;
@@ -172,13 +219,28 @@ export const reduxSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(REGISTER.rejected, (state, action) => {
-        const { error } = action;
-        state.message = error.message;
+        const { payload } = action;
+        state.message = payload;
+        state.isLoading = false;
+      })
+      .addCase(LOGOUT.pending, (state) => {
+        state.isLoading = true;
+        state.isSuccess = false;
+        state.message = "";
+      })
+      .addCase(LOGOUT.fulfilled, (state, _) => {
+        state.isLoading = false;
+        state.auth = {};
+        state.isSuccess = true;
+      })
+      .addCase(LOGOUT.rejected, (state, action) => {
+        const { payload } = action;
+        state.message = payload;
         state.isLoading = false;
       });
   },
 });
 
-export const { RESET, MAXPAGE, UPDATE_AUTH } = reduxSlice.actions;
+export const { RESET, MAXPAGE } = reduxSlice.actions;
 
 export default reduxSlice.reducer;

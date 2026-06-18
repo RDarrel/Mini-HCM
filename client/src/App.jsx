@@ -2,18 +2,25 @@ import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Platforms from "./pages/platforms";
 import RouteConfig from "./routes/RouteConfig";
-import { useDispatch, useSelector } from "react-redux";
-import { VALIDATEREFRESH } from "./services/redux/slices/auth";
+import { useDispatch } from "react-redux";
+import { onAuthStateChanged } from "firebase/auth";
 import { useEffect } from "react";
 import Authentication from "./pages/authentication";
+import { auth } from "./services/config/firebase";
+import { RESTORE_SESSION, RESET } from "./services/redux/slices/auth";
 export default function App() {
-  const { auth, token } = useSelector(({ auth }) => auth),
-    dispatch = useDispatch();
+  const dispatch = useDispatch();
   useEffect(() => {
-    if (!auth?._id && token) {
-      dispatch(VALIDATEREFRESH(token));
-    }
-  }, [token, auth]);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        dispatch(RESTORE_SESSION(user.uid));
+      } else {
+        dispatch(RESET());
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   return (
     <Routes>
       <Route path="/" element={<Authentication />} />

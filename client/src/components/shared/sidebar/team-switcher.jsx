@@ -24,10 +24,8 @@ export function TeamSwitcher() {
             >
               <img src={logo} className="h-12 rounded-full" />
               <div className="leading-tight">
-                <h2 className="font-bold">Sandy's Kitchenette</h2>
-                <p className="text-xs text-muted-foreground">
-                  Management System
-                </p>
+                <h2 className="font-bold">Mini HCM</h2>
+                <p className="text-xs text-muted-foreground">Cornerstone IT.</p>
               </div>
             </SidebarMenuButton>
           </DropdownMenuTrigger>

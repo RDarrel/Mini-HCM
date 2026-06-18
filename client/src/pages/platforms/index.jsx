@@ -32,7 +32,9 @@ export default function Platforms() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">{auth?.role}</BreadcrumbLink>
+                  <BreadcrumbLink href="#">
+                    {capitalize(auth.role)}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
