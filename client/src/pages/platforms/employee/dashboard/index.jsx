@@ -7,7 +7,8 @@ import {
   Clock3,
   Timer,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { PUNCH } from "@/services/redux/slices/attendance";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,13 +126,14 @@ const createTodayRecord = (records, auth) => {
 
 const Dashboard = () => {
   const { auth = {} } = useSelector(({ auth }) => auth);
+
   const [records, setRecords] = useState([]);
   const [now, setNow] = useState(new Date());
 
   const scheduleStart = auth?.schedule?.start || "09:00";
   const scheduleEnd = auth?.schedule?.end || "18:00";
   const storageKey = useMemo(() => getStorageKey(auth?.uid), [auth?.uid]);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     const storedRecords = localStorage.getItem(storageKey);
     setRecords(storedRecords ? JSON.parse(storedRecords) : []);
@@ -242,6 +244,14 @@ const Dashboard = () => {
       punchInAt: current.toISOString(),
       status: "In Progress",
     });
+
+    dispatch(
+      PUNCH({
+        userId: auth.uid,
+        punchType: "in",
+        schedule: auth.schedule,
+      }),
+    );
   };
 
   const handlePunchOut = () => {
@@ -255,6 +265,14 @@ const Dashboard = () => {
       total: getDuration(record.punchInAt, current),
       status: "Completed",
     });
+
+    dispatch(
+      PUNCH({
+        userId: auth.uid,
+        punchType: "out",
+        schedule: auth.schedule,
+      }),
+    );
   };
 
   return (
@@ -263,7 +281,7 @@ const Dashboard = () => {
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0">
+              {/* <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <CardTitle className="truncate text-2xl">
                     {getFullName(auth?.name)}
@@ -275,9 +293,11 @@ const Dashboard = () => {
                 <CardDescription className="mt-1">
                   {formatFullDate(now)}
                 </CardDescription>
-              </div>
+              </div> */}
 
               <div className="flex flex-wrap gap-4 text-sm">
+                {formatFullDate(now)}
+
                 <InlineMetric
                   icon={Clock3}
                   label="Time"
@@ -294,7 +314,11 @@ const Dashboard = () => {
                   label="Assigned Schedule"
                   value={shiftLabel}
                 />
-                <InfoPanel icon={Timer} label="Hours Logged" value={todayTotal} />
+                <InfoPanel
+                  icon={Timer}
+                  label="Hours Logged"
+                  value={todayTotal}
+                />
                 <InfoPanel label="Attendance Status" value={statusLabel} />
               </div>
 

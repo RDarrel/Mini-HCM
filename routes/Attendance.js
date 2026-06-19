@@ -1,6 +1,7 @@
 const router = require("express").Router(),
-  { browse } = require("../controller/Attendance");
+  { browse, punch } = require("../controller/Attendance"),
+  verifyToken = require("../middleware/auth");
 
-router.get("/", browse);
+router.get("/", verifyToken, browse).post("/punch", verifyToken, punch);
 
 module.exports = router;
