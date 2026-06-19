@@ -204,11 +204,11 @@ const Dashboard = () => {
         <section className="grid gap-4">
           <Card className="border-border/70 shadow-sm">
             <CardHeader>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Today&apos;s Summary</CardTitle>
                   <CardDescription>
-                    Payroll breakdown for the current workday.
+                    Breakdown for the current workday.
                   </CardDescription>
                 </div>
                 <ClipboardList className="mt-1 size-5 text-muted-foreground" />
