@@ -33,7 +33,7 @@ const computeNightDifferential = (timeIn, timeOut) => {
     Math.min(timeOut.getTime(), ndWindowEnd.getTime()),
   );
 
-  // No overlap found
+  // No overlap
   if (overlapEnd <= overlapStart) {
     return 0;
   }

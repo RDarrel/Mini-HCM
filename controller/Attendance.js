@@ -51,6 +51,7 @@ const punchOut = async (userId, schedule) => {
       schedule,
     });
 
+    // Add daily summary
     await db
       .collection("dailySummary")
       .add({ attendanceId: doc.id, ...summary });
