@@ -3,7 +3,10 @@ const { computeDailySummary } = require("../utilities/attendance");
 
 exports.browse = async (req, res) => {
   try {
-    const snapshot = await db.collection("attendance").get();
+    const snapshot = await db
+      .collection("attendance")
+      .orderBy("createdAt", "desc")
+      .get();
     const attendance = snapshot.docs.map((doc) => doc.data());
     res.json({ message: "Attendance Browse Successfully", data: attendance });
   } catch (error) {
@@ -17,6 +20,7 @@ const punchIn = async (userId) => {
       userId,
       timeIn: admin.firestore.FieldValue.serverTimestamp(),
       timeOut: null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
     const doc = await docRef.get();
     return { id: docRef.id, ...doc.data() };

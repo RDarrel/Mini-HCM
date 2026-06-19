@@ -1,10 +1,8 @@
+import toJSDate from "./toJSDate";
 const date = (timestamp, withTime = false) => {
   if (!timestamp) return "-";
 
-  const date =
-    typeof timestamp.toDate === "function"
-      ? timestamp.toDate()
-      : new Date(timestamp._seconds * 1000);
+  const date = toJSDate(timestamp);
 
   return date.toLocaleDateString("en-US", {
     month: "short",

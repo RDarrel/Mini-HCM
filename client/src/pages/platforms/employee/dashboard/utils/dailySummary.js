@@ -1,11 +1,5 @@
-const toJSDate = (value) => {
-  if (!value) return new Date();
-  if (value.toDate) return value.toDate();
-  if (typeof value._seconds === "number")
-    return new Date(value._seconds * 1000);
-  return new Date(value);
-};
-
+import { Formatter } from "@/services/utilities";
+const { toJSDate } = Formatter;
 const getShiftDateTime = (baseDate, timeString) => {
   const [hour, minute] = timeString.split(":").map(Number);
 
@@ -55,7 +49,7 @@ const computeDailySummary = (attendance, schedule) => {
     };
 
   const timeIn = toJSDate(attendance.timeIn);
-  const timeOut = toJSDate(attendance.timeOut);
+  const timeOut = toJSDate(attendance.timeOut || new Date());
 
   const shiftStart = getShiftDateTime(timeIn, schedule.start);
   const shiftEnd = getShiftDateTime(timeIn, schedule.end);

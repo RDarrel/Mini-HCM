@@ -1,10 +1,8 @@
+import toJSDate from "./toJSDate";
 const time = (timestamp) => {
   if (!timestamp) return "-";
 
-  const date =
-    typeof timestamp.toDate === "function"
-      ? timestamp.toDate()
-      : new Date(timestamp._seconds * 1000);
+  const date = toJSDate(timestamp);
 
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",

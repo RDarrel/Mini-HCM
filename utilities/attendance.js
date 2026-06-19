@@ -40,7 +40,7 @@ const computeNightDifferential = (timeIn, timeOut) => {
 
   const ndMinutes = diffInMinutes(overlapStart, overlapEnd);
 
-  return Number((ndMinutes / 60).toFixed(2));
+  return ndMinutes;
 };
 
 const computeDailySummary = ({ timeIn, timeOut, schedule }) => {
@@ -65,12 +65,17 @@ const computeDailySummary = ({ timeIn, timeOut, schedule }) => {
 
   const overtimeMinutes = diffInMinutes(shiftEnd, timeOut);
 
+  const totalLoggedMinutes = Math.floor(
+    (shiftEnd.getTime() - shiftStart.getTime()) / (1000 * 60),
+  );
+
   return {
-    regularHours: Number((regularMinutes / 60).toFixed(2)),
-    overtimeHours: Number((overtimeMinutes / 60).toFixed(2)),
-    nightDifferentialHours: computeNightDifferential(timeIn, timeOut),
+    regularMinutes,
+    overtimeMinutes,
+    nightDiffMinutes: computeNightDifferential(timeIn, timeOut),
     lateMinutes,
     undertimeMinutes,
+    totalLoggedMinutes,
   };
 };
 

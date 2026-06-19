@@ -36,60 +36,12 @@ const DEFAULT_SCHEDULE = {
   end: "18:00",
 };
 
-const toDate = (timestamp) => {
-  if (!timestamp) return null;
-  if (timestamp instanceof Date) return timestamp;
-  if (typeof timestamp.toDate === "function") return timestamp.toDate();
-  if (typeof timestamp._seconds === "number") {
-    return new Date(timestamp._seconds * 1000);
-  }
-
-  const date = new Date(timestamp);
-
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const formatClock = (date) =>
-  date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-
 const formatFullDate = (date) =>
   date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
-
-const formatScheduleTime = (time = "00:00") => {
-  const [hours = "0", minutes = "0"] = time.split(":");
-  const date = new Date();
-  date.setHours(Number(hours), Number(minutes), 0, 0);
-
-  return formatClock(date);
-};
-
-const getMinutesFromTime = (time = "00:00") => {
-  const [hours = "0", minutes = "0"] = time.split(":");
-
-  return Number(hours) * 60 + Number(minutes);
-};
-
-const getWorkedMinutes = (timeIn, timeOut) => {
-  const start = toDate(timeIn);
-  const end = toDate(timeOut);
-
-  if (!start || !end) return 0;
-
-  return Math.max(0, Math.floor((end - start) / 60000));
-};
-
-const isSameDate = (left, right) =>
-  left?.getFullYear() === right.getFullYear() &&
-  left?.getMonth() === right.getMonth() &&
-  left?.getDate() === right.getDate();
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -102,10 +54,7 @@ const Dashboard = () => {
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
-  const scheduleStart = schedule.start || DEFAULT_SCHEDULE.start;
-  const scheduleEnd = schedule.end || DEFAULT_SCHEDULE.end;
-  const scheduledMinutes =
-    getMinutesFromTime(scheduleEnd) - getMinutesFromTime(scheduleStart);
+  const scheduledMinutes = utils.compute.scheduleMinutes(schedule);
 
   useEffect(() => {
     dispatch(BROWSE());
@@ -117,18 +66,7 @@ const Dashboard = () => {
     return () => window.clearInterval(interval);
   }, []);
 
-  const attendanceRecords = useMemo(
-    () => collections.filter((record) => record.userId === auth.uid),
-    [auth.uid, collections],
-  );
-
-  const todayRecord = useMemo(
-    () =>
-      attendanceRecords.find((record) =>
-        isSameDate(toDate(record.timeIn), now),
-      ) || null,
-    [attendanceRecords, now],
-  );
+  const todayRecord = useMemo(() => collections[0] || null, [collections, now]);
 
   const {
     regularMinutes,
@@ -137,18 +75,15 @@ const Dashboard = () => {
     lateMinutes,
     undertimeMinutes,
     totalLoggedMinutes,
-  } = utils?.computeSummary(todayRecord, schedule);
+  } = utils?.compute.dailySummary(todayRecord, schedule);
 
   const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
   const workedMinutes = totalLoggedMinutes;
-
   const progress = Math.min(
     100,
     Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
   );
-  const shiftLabel = `${formatScheduleTime(scheduleStart)} - ${formatScheduleTime(
-    scheduleEnd,
-  )}`;
+  const shiftLabel = utils.shiftLabel(auth?.schedule);
   const statusLabel = utils.statusLabel(todayRecord);
   const summaryItems = [
     {
@@ -197,7 +132,7 @@ const Dashboard = () => {
               <InlineMetric
                 icon={Clock3}
                 label="Time"
-                value={formatClock(now)}
+                value={Formatter.time(now)}
               />
             </div>
           </CardHeader>
@@ -211,7 +146,7 @@ const Dashboard = () => {
                 />
                 <InfoPanel
                   icon={Timer}
-                  label="Hours Logged"
+                  label="Current Session"
                   value={Formatter.duration(workedMinutes)}
                 />
                 <InfoPanel label="Attendance Status" value={statusLabel} />
@@ -298,10 +233,10 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground">
                   Loading attendance records...
                 </p>
-              ) : attendanceRecords.length ? (
+              ) : collections.length ? (
                 <>
                   <div className="grid gap-3 md:hidden">
-                    {attendanceRecords.map((record, index) => (
+                    {collections.map((record, index) => (
                       <HistoryCard
                         key={record.id || `${record.userId}-${index}`}
                         record={record}
@@ -320,7 +255,7 @@ const Dashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {attendanceRecords.map((record, index) => (
+                      {collections.map((record, index) => (
                         <TableRow
                           key={record.id || `${record.userId}-${index}`}
                         >
@@ -334,9 +269,15 @@ const Dashboard = () => {
                             {Formatter.time(record.timeOut)}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {Formatter.duration(
-                              record?.totalLoggedMinutes || "",
-                            )}
+                            {record?.timeOut
+                              ? Formatter.duration(
+                                  Math.floor(
+                                    (new Date(record?.timeOut).getTime() -
+                                      new Date(record?.timeIn).getTime()) /
+                                      (1000 * 60),
+                                  ),
+                                )
+                              : "-"}
                           </TableCell>
                           <TableCell>
                             <AttendanceStatus status={record.status} />
