@@ -23,15 +23,15 @@ const formatFullDate = (date) =>
     day: "numeric",
   });
 const Punch = ({
-  shiftLabel,
-  workedMinutes,
-  statusLabel,
-  todayRecord,
-  isSubmitting,
-  isPunchedIn,
+  shiftLabel = "",
+  statusLabel = "",
+  isSubmitting = false,
+  isPunchedIn = false,
+  workedMinutes = 0,
+  now = new Date(),
+  todayRecord = {},
   handlePunch = () => {},
 }) => {
-  const now = new Date();
   return (
     <Card>
       <CardHeader>

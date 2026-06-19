@@ -104,6 +104,7 @@ const Dashboard = () => {
           statusLabel={statusLabel}
           todayRecord={todayRecord}
           isSubmitting={isSubmitting}
+          now={now}
         />
 
         <section className="grid gap-4">

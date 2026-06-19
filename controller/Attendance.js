@@ -68,6 +68,27 @@ const punchOut = async (userId, schedule) => {
   }
 };
 
+const punchValidation = async ({ userId, punchType }) => {
+  if (!["in", "out"].includes(punchType)) {
+    throw new Error("Invalid punch type");
+  }
+
+  const openSnapshot = await db
+    .collection("attendance")
+    .where("userId", "==", userId)
+    .where("timeOut", "==", null)
+    .limit(1)
+    .get();
+
+  if (punchType === "in" && !openSnapshot.empty) {
+    throw new Error("Punch Out before Punch In");
+  }
+
+  if (punchType === "out" && openSnapshot.empty) {
+    throw new Error("Punch In before Punch Out");
+  }
+};
+
 exports.punch = async (req, res) => {
   try {
     const { userId, punchType, schedule = {} } = req.body;
