@@ -6,7 +6,6 @@ import Female from "../../assets/female.jpg";
 import globalSearch from "./globalSearch";
 import Formatter from "./formatter";
 const ENDPOINT = "http://localhost:5000";
-const ENCRYPTION_KEY = "601b422c2548c7598feff2332a8e6eee9";
 //use this to if the system is deployed
 // const ENDPOINT = window.location.origin;
 
@@ -17,7 +16,6 @@ const PresetImage = (gender) => {
 };
 
 export {
-  ENCRYPTION_KEY,
   Formatter,
   ENDPOINT,
   axioKit,

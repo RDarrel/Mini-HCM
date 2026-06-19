@@ -1,4 +1,6 @@
 import axios from "axios";
+import { getAuth } from "firebase/auth";
+
 /**
  * A universal GET request.
  *
@@ -8,8 +10,9 @@ import axios from "axios";
  * @returns {{ success: boolean, payload: Array<any>|object }} - The result object containing success and payload.
  */
 
-const universal = async (name, token, key = "") => {
+const universal = async (name, key = "") => {
   let queryString = "";
+  const token = await getAuth().currentUser.getIdToken();
 
   if (typeof key === "object") {
     Object.keys(key).forEach((i) => {
@@ -22,7 +25,7 @@ const universal = async (name, token, key = "") => {
   try {
     const response = await axios.get(`${name}${queryString}`, {
       headers: {
-        Authorization: `QTracy ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 

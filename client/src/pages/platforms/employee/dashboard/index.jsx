@@ -8,7 +8,8 @@ import {
   Timer,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { PUNCH } from "@/services/redux/slices/attendance";
+import { BROWSE, PUNCH } from "@/services/redux/slices/attendance";
+import { Formatter } from "@/services/utilities";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,31 +29,37 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const STORAGE_PREFIX = "employee-attendance";
+const DEFAULT_SCHEDULE = {
+  start: "09:00",
+  end: "18:00",
+};
+
+const toDate = (timestamp) => {
+  if (!timestamp) return null;
+  if (timestamp instanceof Date) return timestamp;
+  if (typeof timestamp.toDate === "function") return timestamp.toDate();
+  if (typeof timestamp._seconds === "number") {
+    return new Date(timestamp._seconds * 1000);
+  }
+
+  const date = new Date(timestamp);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 const formatClock = (date) =>
-  new Intl.DateTimeFormat("en-US", {
+  date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-  }).format(date);
-
-const formatDate = (date) =>
-  new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
+  });
 
 const formatFullDate = (date) =>
-  new Intl.DateTimeFormat("en-US", {
+  date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
-  }).format(date);
-
-const formatWeekday = (date) =>
-  new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+  });
 
 const formatScheduleTime = (time = "00:00") => {
   const [hours = "0", minutes = "0"] = time.split(":");
@@ -68,21 +75,6 @@ const getMinutesFromTime = (time = "00:00") => {
   return Number(hours) * 60 + Number(minutes);
 };
 
-const getDuration = (start, end = new Date()) => {
-  if (!start) return "0h 00m";
-
-  const diff = Math.max(0, end.getTime() - new Date(start).getTime());
-  const totalMinutes = Math.floor(diff / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
-};
-
-const formatDecimalHours = (minutes = 0) => `${(minutes / 60).toFixed(1)} hrs`;
-
-const formatMinutes = (minutes = 0) => `${Math.max(0, minutes)} mins`;
-
 const getScheduledDate = (time = "00:00", date = new Date()) => {
   const [hours = "0", minutes = "0"] = time.split(":");
   const scheduledDate = new Date(date);
@@ -91,57 +83,43 @@ const getScheduledDate = (time = "00:00", date = new Date()) => {
   return scheduledDate;
 };
 
-const getFullName = (name) => {
-  if (!name) return "Employee";
-  if (typeof name === "string") return name;
+const getWorkedMinutes = (timeIn, timeOut, fallbackEnd = new Date()) => {
+  const start = toDate(timeIn);
+  const end = toDate(timeOut) || fallbackEnd;
 
-  return [name.fname, name.mname, name.lname].filter(Boolean).join(" ");
+  if (!start || !end) return 0;
+
+  return Math.max(0, Math.floor((end - start) / 60000));
 };
 
-const getStorageKey = (uid) => `${STORAGE_PREFIX}-${uid || "guest"}`;
+const formatDecimalHours = (minutes = 0) => `${(minutes / 60).toFixed(1)} hrs`;
 
-const createTodayRecord = (records, auth) => {
-  const now = new Date();
-  const dateKey = now.toISOString().slice(0, 10);
-  const existing = records.find((record) => record.dateKey === dateKey);
+const formatMinutes = (minutes = 0) => `${Math.max(0, minutes)} mins`;
 
-  if (existing) return existing;
-
-  return {
-    id: dateKey,
-    dateKey,
-    date: formatDate(now),
-    day: formatWeekday(now),
-    schedule: `${formatScheduleTime(auth?.schedule?.start)} - ${formatScheduleTime(
-      auth?.schedule?.end,
-    )}`,
-    punchIn: null,
-    punchOut: null,
-    punchInAt: null,
-    punchOutAt: null,
-    total: "0h 00m",
-    status: "Pending",
-  };
-};
+const isSameDate = (left, right) =>
+  left?.getFullYear() === right.getFullYear() &&
+  left?.getMonth() === right.getMonth() &&
+  left?.getDate() === right.getDate();
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
   const { auth = {} } = useSelector(({ auth }) => auth);
-
-  const [records, setRecords] = useState([]);
+  const {
+    collections = [],
+    isLoading,
+    isSubmitting,
+  } = useSelector(({ attendance }) => attendance);
   const [now, setNow] = useState(new Date());
 
-  const scheduleStart = auth?.schedule?.start || "09:00";
-  const scheduleEnd = auth?.schedule?.end || "18:00";
-  const storageKey = useMemo(() => getStorageKey(auth?.uid), [auth?.uid]);
-  const dispatch = useDispatch();
-  useEffect(() => {
-    const storedRecords = localStorage.getItem(storageKey);
-    setRecords(storedRecords ? JSON.parse(storedRecords) : []);
-  }, [storageKey]);
+  const schedule = auth?.schedule || DEFAULT_SCHEDULE;
+  const scheduleStart = schedule.start || DEFAULT_SCHEDULE.start;
+  const scheduleEnd = schedule.end || DEFAULT_SCHEDULE.end;
+  const scheduledMinutes =
+    getMinutesFromTime(scheduleEnd) - getMinutesFromTime(scheduleStart);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(records));
-  }, [records, storageKey]);
+    dispatch(BROWSE());
+  }, [dispatch]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 30000);
@@ -150,30 +128,25 @@ const Dashboard = () => {
   }, []);
 
   const todayRecord = useMemo(
-    () => createTodayRecord(records, auth),
-    [records, auth],
+    () =>
+      collections.find((record) => isSameDate(toDate(record.timeIn), now)) ||
+      null,
+    [collections, now],
   );
 
-  const isPunchedIn = Boolean(todayRecord.punchInAt && !todayRecord.punchOutAt);
-  const isComplete = Boolean(todayRecord.punchInAt && todayRecord.punchOutAt);
-  const todayTotal = isPunchedIn
-    ? getDuration(todayRecord.punchInAt, now)
-    : todayRecord.total;
-  const scheduledMinutes =
-    getMinutesFromTime(scheduleEnd) - getMinutesFromTime(scheduleStart);
-  const workedMinutes = todayRecord.punchInAt
-    ? Math.floor(
-        ((todayRecord.punchOutAt ? new Date(todayRecord.punchOutAt) : now) -
-          new Date(todayRecord.punchInAt)) /
-          60000,
-      )
-    : 0;
-  const lateMinutes = todayRecord.punchInAt
+  const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
+  const isComplete = Boolean(todayRecord?.timeIn && todayRecord?.timeOut);
+  const workedMinutes = getWorkedMinutes(
+    todayRecord?.timeIn,
+    todayRecord?.timeOut,
+    now,
+  );
+  const lateMinutes = todayRecord?.timeIn
     ? Math.max(
         0,
         Math.floor(
-          (new Date(todayRecord.punchInAt) -
-            getScheduledDate(scheduleStart, new Date(todayRecord.punchInAt))) /
+          (toDate(todayRecord.timeIn) -
+            getScheduledDate(scheduleStart, toDate(todayRecord.timeIn))) /
             60000,
         ),
       )
@@ -181,6 +154,21 @@ const Dashboard = () => {
   const undertimeMinutes = isComplete
     ? Math.max(0, scheduledMinutes - workedMinutes)
     : 0;
+  const todayTotal = todayRecord?.timeIn
+    ? formatDuration(todayRecord.timeIn, todayRecord.timeOut || now)
+    : "0h 00m";
+  const progress = Math.min(
+    100,
+    Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
+  );
+  const shiftLabel = `${formatScheduleTime(scheduleStart)} - ${formatScheduleTime(
+    scheduleEnd,
+  )}`;
+  const statusLabel = isPunchedIn
+    ? "On shift"
+    : isComplete
+      ? "Shift completed"
+      : "Ready to punch in";
   const summaryItems = [
     {
       label: "Regular Hours",
@@ -203,107 +191,29 @@ const Dashboard = () => {
       value: "0 hrs",
     },
   ];
-  const progress = Math.min(
-    100,
-    Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
-  );
-  const shiftLabel = `${formatScheduleTime(scheduleStart)} - ${formatScheduleTime(
-    scheduleEnd,
-  )}`;
-  const statusLabel = isPunchedIn
-    ? "On shift"
-    : isComplete
-      ? "Shift completed"
-      : "Ready to punch in";
-  const history = useMemo(
-    () =>
-      [todayRecord, ...records.filter((record) => record.id !== todayRecord.id)]
-        .slice(0, 6)
-        .map((record) =>
-          record.id === todayRecord.id
-            ? { ...record, total: todayTotal }
-            : record,
-        ),
-    [records, todayRecord, todayTotal],
-  );
 
-  const saveRecord = (nextRecord) => {
-    setRecords((prev) => [
-      nextRecord,
-      ...prev.filter((item) => item.dateKey !== nextRecord.dateKey),
-    ]);
-  };
-
-  const handlePunchIn = () => {
-    const current = new Date();
-    const record = createTodayRecord(records, auth);
-
-    saveRecord({
-      ...record,
-      punchIn: formatClock(current),
-      punchInAt: current.toISOString(),
-      status: "In Progress",
-    });
-
+  const handlePunch = (punchType) => {
     dispatch(
       PUNCH({
         userId: auth.uid,
-        punchType: "in",
-        schedule: auth.schedule,
-      }),
-    );
-  };
-
-  const handlePunchOut = () => {
-    const current = new Date();
-    const record = createTodayRecord(records, auth);
-
-    saveRecord({
-      ...record,
-      punchOut: formatClock(current),
-      punchOutAt: current.toISOString(),
-      total: getDuration(record.punchInAt, current),
-      status: "Completed",
-    });
-
-    dispatch(
-      PUNCH({
-        userId: auth.uid,
-        punchType: "out",
-        schedule: auth.schedule,
+        punchType,
+        schedule,
       }),
     );
   };
 
   return (
-    <main className="min-h-[calc(100vh-3.25rem)]  p-4 sm:p-6">
+    <main className="min-h-[calc(100vh-3.25rem)] p-4 sm:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              {/* <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <CardTitle className="truncate text-2xl">
-                    {getFullName(auth?.name)}
-                  </CardTitle>
-                  <Badge variant={isPunchedIn ? "default" : "secondary"}>
-                    {statusLabel}
-                  </Badge>
-                </div>
-                <CardDescription className="mt-1">
-                  {formatFullDate(now)}
-                </CardDescription>
-              </div> */}
-
-              <div className="flex flex-wrap gap-4 text-sm">
-                {formatFullDate(now)}
-
-                <InlineMetric
-                  icon={Clock3}
-                  label="Time"
-                  value={formatClock(now)}
-                />
+              <div>
+                <CardTitle>Employee Dashboard</CardTitle>
+                <CardDescription>{formatFullDate(now)}</CardDescription>
               </div>
+
+              <InlineMetric icon={Clock3} label="Time" value={formatClock(now)} />
             </div>
           </CardHeader>
           <CardContent>
@@ -325,8 +235,8 @@ const Dashboard = () => {
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
                 <Button
                   size="lg"
-                  disabled={Boolean(todayRecord.punchInAt)}
-                  onClick={handlePunchIn}
+                  disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
+                  onClick={() => handlePunch("in")}
                 >
                   <ArrowDownToLine />
                   Punch In
@@ -334,8 +244,8 @@ const Dashboard = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  disabled={!isPunchedIn}
-                  onClick={handlePunchOut}
+                  disabled={isSubmitting || !isPunchedIn}
+                  onClick={() => handlePunch("out")}
                 >
                   <ArrowUpFromLine />
                   Punch Out
@@ -377,11 +287,11 @@ const Dashboard = () => {
               <div className="grid gap-3 sm:grid-cols-3">
                 <PunchCell
                   label="Punch In"
-                  value={todayRecord.punchIn || "-"}
+                  value={Formatter.time(todayRecord?.timeIn)}
                 />
                 <PunchCell
                   label="Punch Out"
-                  value={todayRecord.punchOut || "-"}
+                  value={Formatter.time(todayRecord?.timeOut)}
                 />
                 <PunchCell label="Total Logged" value={todayTotal} />
               </div>
@@ -392,52 +302,58 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle>Attendance History</CardTitle>
               <CardDescription>
-                Recent records from this device.
+                Recent attendance records from your account.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 md:hidden">
-                {history.map((record) => (
-                  <HistoryCard key={record.id} record={record} />
-                ))}
-              </div>
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground">
+                  Loading attendance records...
+                </p>
+              ) : collections.length ? (
+                <>
+                  <div className="grid gap-3 md:hidden">
+                    {collections.map((record) => (
+                      <HistoryCard key={record.id} record={record} />
+                    ))}
+                  </div>
 
-              <Table className="hidden md:table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Punch In</TableHead>
-                    <TableHead>Punch Out</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {history.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell>
-                        <div className="font-medium">{record.date}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {record.day}
-                        </div>
-                      </TableCell>
-                      <TableCell>{record.punchIn || "-"}</TableCell>
-                      <TableCell>{record.punchOut || "-"}</TableCell>
-                      <TableCell className="font-medium">
-                        {record.total}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {record.status === "Completed" && (
-                            <CheckCircle2 className="size-3" />
-                          )}
-                          {record.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  <Table className="hidden md:table">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Punch In</TableHead>
+                        <TableHead>Punch Out</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {collections.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            <div className="font-medium">
+                              {Formatter.date(record.timeIn)}
+                            </div>
+                          </TableCell>
+                          <TableCell>{Formatter.time(record.timeIn)}</TableCell>
+                          <TableCell>{Formatter.time(record.timeOut)}</TableCell>
+                          <TableCell className="font-medium">
+                            {formatDuration(record.timeIn, record.timeOut)}
+                          </TableCell>
+                          <TableCell>
+                            <AttendanceStatus status={record.status} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No attendance records yet.
+                </p>
+              )}
             </CardContent>
           </Card>
         </section>
@@ -446,11 +362,24 @@ const Dashboard = () => {
   );
 };
 
+const formatDuration = (timeIn, timeOut) => {
+  const start = toDate(timeIn);
+  const end = toDate(timeOut);
+
+  if (!start || !end) return "-";
+
+  const totalMinutes = Math.max(0, Math.floor((end - start) / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+};
+
 const InlineMetric = ({ icon, label, value }) => {
   const MetricIcon = icon;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 text-sm">
       <MetricIcon className="size-4 text-primary" />
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
@@ -490,20 +419,29 @@ const HistoryCard = ({ record }) => (
   <div className="rounded-lg border bg-background p-3">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <p className="font-medium">{record.date}</p>
-        <p className="text-xs text-muted-foreground">{record.day}</p>
+        <p className="font-medium">{Formatter.date(record.timeIn)}</p>
+        <p className="text-xs text-muted-foreground">
+          {Formatter.time(record.timeIn)} - {Formatter.time(record.timeOut)}
+        </p>
       </div>
-      <Badge variant="outline">
-        {record.status === "Completed" && <CheckCircle2 className="size-3" />}
-        {record.status}
-      </Badge>
+      <AttendanceStatus status={record.status} />
     </div>
     <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-      <MobileHistoryMetric label="In" value={record.punchIn || "-"} />
-      <MobileHistoryMetric label="Out" value={record.punchOut || "-"} />
-      <MobileHistoryMetric label="Total" value={record.total} />
+      <MobileHistoryMetric label="In" value={Formatter.time(record.timeIn)} />
+      <MobileHistoryMetric label="Out" value={Formatter.time(record.timeOut)} />
+      <MobileHistoryMetric
+        label="Total"
+        value={formatDuration(record.timeIn, record.timeOut)}
+      />
     </div>
   </div>
+);
+
+const AttendanceStatus = ({ status }) => (
+  <Badge variant="outline">
+    {status === "Completed" && <CheckCircle2 className="size-3" />}
+    {status || "Pending"}
+  </Badge>
 );
 
 const MobileHistoryMetric = ({ label, value }) => (

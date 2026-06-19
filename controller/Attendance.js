@@ -3,7 +3,9 @@ const { computeDailySummary } = require("../utilities/attendance");
 
 exports.browse = async (req, res) => {
   try {
-    res.json({ message: "Attendance Browse Successfully" });
+    const snapshot = await db.collection("attendance").get();
+    const attendance = snapshot.docs.map((doc) => doc.data());
+    res.json({ message: "Attendance Browse Successfully", data: attendance });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -67,7 +69,9 @@ exports.punch = async (req, res) => {
     const { userId, punchType, schedule = {} } = req.body;
     let data = {};
     if (!userId || !punchType) {
-      return res.status(400).json({ error: "User is required!" });
+      return res
+        .status(400)
+        .json({ error: "UserId and punchType are required!" });
     }
 
     if (punchType === "in") {

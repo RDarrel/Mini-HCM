@@ -6,12 +6,26 @@ const initialState = {
   collections: [],
   isSuccess: false,
   isLoading: false,
+  isSubmitting: false,
   message: "",
 };
 
 export const PUNCH = createAsyncThunk(`${url}/punch`, (payload, thunkAPI) => {
   try {
     return axioKit.save(url, payload, "punch");
+  } catch (error) {
+    const message =
+      (error.response && error.response.data && error.response.data.message) ||
+      error.message ||
+      error.toString();
+
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
+export const BROWSE = createAsyncThunk(`${url}/browse`, (_, thunkAPI) => {
+  try {
+    return axioKit.universal(url);
   } catch (error) {
     const message =
       (error.response && error.response.data && error.response.data.message) ||
@@ -41,8 +55,24 @@ export const reduxSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(PUNCH.pending, (state) => {
+      .addCase(BROWSE.pending, (state) => {
         state.isLoading = true;
+        state.isSuccess = false;
+        state.message = "";
+      })
+      .addCase(BROWSE.fulfilled, (state, action) => {
+        const { data } = action.payload;
+        state.collections = data;
+        state.isSuccess = true;
+        state.isLoading = false;
+      })
+      .addCase(BROWSE.rejected, (state, action) => {
+        const { error } = action;
+        state.message = error.message;
+        state.isLoading = false;
+      })
+      .addCase(PUNCH.pending, (state) => {
+        state.isSubmitting = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -57,12 +87,12 @@ export const reduxSlice = createSlice({
         }
         state.collections = _collections;
         state.isSuccess = true;
-        state.isLoading = false;
+        state.isSubmitting = false;
       })
       .addCase(PUNCH.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isLoading = false;
+        state.isSubmitting = false;
       });
   },
 });

@@ -1,16 +1,20 @@
-const format = (date, withTime = false) => {
-  const options = {
+const date = (timestamp, withTime = false) => {
+  if (!timestamp) return "-";
+
+  const date =
+    typeof timestamp.toDate === "function"
+      ? timestamp.toDate()
+      : new Date(timestamp._seconds * 1000);
+
+  return date.toLocaleDateString("en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
-  };
-
-  if (withTime) {
-    options.hour = "2-digit";
-    options.minute = "2-digit";
-  }
-
-  return new Date(date).toLocaleDateString("en-US", options);
+    ...(withTime && {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  });
 };
 
-export default format;
+export default date;
