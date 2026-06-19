@@ -5,16 +5,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@components/ui/table";
-import { History } from "lucide-react";
+} from "@/components/ui/table";
+import { CheckCircle2, History } from "lucide-react";
 import { useSelector } from "react-redux";
-import { Formatter } from "@services/utilities";
+import { Formatter } from "@/services/utilities";
+
+const getRecordMinutes = (record) => {
+  if (Number.isFinite(record?.totalLoggedMinutes)) {
+    return record.totalLoggedMinutes;
+  }
+
+  if (!record?.timeIn || !record?.timeOut) return 0;
+
+  return Math.floor(
+    (new Date(record.timeOut).getTime() - new Date(record.timeIn).getTime()) /
+      (1000 * 60),
+  );
+};
+
 const AttHistory = () => {
   const { collections = [], isLoading } = useSelector(
     ({ attendance }) => attendance,
@@ -77,7 +93,9 @@ const AttHistory = () => {
                         {Formatter.time(record.timeOut)}
                       </TableCell>
                       <TableCell className="font-medium tabular-nums">
-                        {record?.timeOut ? Formatter.duration(50) : "-"}
+                        {record?.timeOut
+                          ? Formatter.duration(getRecordMinutes(record))
+                          : "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <AttendanceStatus status={record.status} />
@@ -116,10 +134,19 @@ const HistoryCard = ({ record }) => (
       <MobileHistoryMetric label="Out" value={Formatter.time(record.timeOut)} />
       <MobileHistoryMetric
         label="Total"
-        value={record?.timeOut ? Formatter.duration(50) : "-"}
+        value={
+          record?.timeOut ? Formatter.duration(getRecordMinutes(record)) : "-"
+        }
       />
     </div>
   </div>
+);
+
+const AttendanceStatus = ({ status }) => (
+  <Badge variant="outline" className="inline-flex gap-1.5 rounded-md">
+    {status === "Completed" && <CheckCircle2 className="size-3" />}
+    {status || "Pending"}
+  </Badge>
 );
 
 const MobileHistoryMetric = ({ label, value }) => (

@@ -1,34 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Activity,
-  CalendarClock,
-  CheckCircle2,
-  Clock3,
-  History,
-  Timer,
-} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { BROWSE, PUNCH } from "@/services/redux/slices/attendance";
 import { Formatter } from "@/services/utilities";
-
+import { Activity, CalendarClock, Clock3, History, Timer } from "lucide-react";
 import utils from "./utils";
-
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import Punch from "./punch";
 import TodaySummary from "./todaySummary";
 import AttHistory from "./history";
@@ -38,27 +13,12 @@ const DEFAULT_SCHEDULE = {
   end: "18:00",
 };
 
-const getRecordMinutes = (record) => {
-  if (Number.isFinite(record?.totalLoggedMinutes)) {
-    return record.totalLoggedMinutes;
-  }
-
-  if (!record?.timeIn || !record?.timeOut) return 0;
-
-  return Math.floor(
-    (new Date(record.timeOut).getTime() - new Date(record.timeIn).getTime()) /
-      (1000 * 60),
-  );
-};
-
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { auth = {} } = useSelector(({ auth }) => auth);
-  const {
-    collections = [],
-    isLoading,
-    isSubmitting,
-  } = useSelector(({ attendance }) => attendance);
+  const { collections = [], isSubmitting } = useSelector(
+    ({ attendance }) => attendance,
+  );
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
@@ -159,43 +119,5 @@ const Dashboard = () => {
     </main>
   );
 };
-
-const HistoryCard = ({ record }) => (
-  <div className="rounded-md border bg-background p-3">
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <p className="font-medium">{Formatter.date(record.timeIn)}</p>
-        <p className="text-xs text-muted-foreground">
-          {Formatter.time(record.timeIn)} - {Formatter.time(record.timeOut)}
-        </p>
-      </div>
-      <AttendanceStatus status={record.status} />
-    </div>
-    <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-muted/30 p-2 text-sm">
-      <MobileHistoryMetric label="In" value={Formatter.time(record.timeIn)} />
-      <MobileHistoryMetric label="Out" value={Formatter.time(record.timeOut)} />
-      <MobileHistoryMetric
-        label="Total"
-        value={
-          record?.timeOut ? Formatter.duration(getRecordMinutes(record)) : "-"
-        }
-      />
-    </div>
-  </div>
-);
-
-const AttendanceStatus = ({ status }) => (
-  <Badge variant="outline" className="inline-flex gap-1.5 rounded-md">
-    {status === "Completed" && <CheckCircle2 className="size-3" />}
-    {status || "Pending"}
-  </Badge>
-);
-
-const MobileHistoryMetric = ({ label, value }) => (
-  <div className="min-w-0">
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <p className="truncate font-medium tabular-nums">{value}</p>
-  </div>
-);
 
 export default Dashboard;
