@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { BROWSE, PUNCH } from "@/services/redux/slices/attendance";
 import { Formatter } from "@/services/utilities";
 
+import utils from "./utils";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,26 +77,14 @@ const getMinutesFromTime = (time = "00:00") => {
   return Number(hours) * 60 + Number(minutes);
 };
 
-const getScheduledDate = (time = "00:00", date = new Date()) => {
-  const [hours = "0", minutes = "0"] = time.split(":");
-  const scheduledDate = new Date(date);
-  scheduledDate.setHours(Number(hours), Number(minutes), 0, 0);
-
-  return scheduledDate;
-};
-
-const getWorkedMinutes = (timeIn, timeOut, fallbackEnd = new Date()) => {
+const getWorkedMinutes = (timeIn, timeOut) => {
   const start = toDate(timeIn);
-  const end = toDate(timeOut) || fallbackEnd;
+  const end = toDate(timeOut);
 
   if (!start || !end) return 0;
 
   return Math.max(0, Math.floor((end - start) / 60000));
 };
-
-const formatDecimalHours = (minutes = 0) => `${(minutes / 60).toFixed(1)} hrs`;
-
-const formatMinutes = (minutes = 0) => `${Math.max(0, minutes)} mins`;
 
 const isSameDate = (left, right) =>
   left?.getFullYear() === right.getFullYear() &&
@@ -127,36 +117,31 @@ const Dashboard = () => {
     return () => window.clearInterval(interval);
   }, []);
 
-  const todayRecord = useMemo(
-    () =>
-      collections.find((record) => isSameDate(toDate(record.timeIn), now)) ||
-      null,
-    [collections, now],
+  const attendanceRecords = useMemo(
+    () => collections.filter((record) => record.userId === auth.uid),
+    [auth.uid, collections],
   );
 
-  const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
-  const isComplete = Boolean(todayRecord?.timeIn && todayRecord?.timeOut);
-  const workedMinutes = getWorkedMinutes(
-    todayRecord?.timeIn,
-    todayRecord?.timeOut,
-    now,
+  const todayRecord = useMemo(
+    () =>
+      attendanceRecords.find((record) =>
+        isSameDate(toDate(record.timeIn), now),
+      ) || null,
+    [attendanceRecords, now],
   );
-  const lateMinutes = todayRecord?.timeIn
-    ? Math.max(
-        0,
-        Math.floor(
-          (toDate(todayRecord.timeIn) -
-            getScheduledDate(scheduleStart, toDate(todayRecord.timeIn))) /
-            60000,
-        ),
-      )
-    : 0;
-  const undertimeMinutes = isComplete
-    ? Math.max(0, scheduledMinutes - workedMinutes)
-    : 0;
-  const todayTotal = todayRecord?.timeIn
-    ? formatDuration(todayRecord.timeIn, todayRecord.timeOut || now)
-    : "0h 00m";
+
+  const {
+    regularMinutes,
+    overtimeMinutes,
+    nightDiffMinutes,
+    lateMinutes,
+    undertimeMinutes,
+    totalLoggedMinutes,
+  } = utils?.computeSummary(todayRecord, schedule);
+
+  const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
+  const workedMinutes = totalLoggedMinutes;
+
   const progress = Math.min(
     100,
     Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
@@ -164,31 +149,27 @@ const Dashboard = () => {
   const shiftLabel = `${formatScheduleTime(scheduleStart)} - ${formatScheduleTime(
     scheduleEnd,
   )}`;
-  const statusLabel = isPunchedIn
-    ? "On shift"
-    : isComplete
-      ? "Shift completed"
-      : "Ready to punch in";
+  const statusLabel = utils.statusLabel(todayRecord);
   const summaryItems = [
     {
       label: "Regular Hours",
-      value: formatDecimalHours(Math.min(workedMinutes, scheduledMinutes)),
+      value: Formatter.duration(regularMinutes),
     },
     {
       label: "Overtime",
-      value: formatDecimalHours(Math.max(0, workedMinutes - scheduledMinutes)),
+      value: Formatter.duration(overtimeMinutes),
     },
     {
       label: "Late",
-      value: formatMinutes(lateMinutes),
+      value: Formatter.duration(lateMinutes),
     },
     {
       label: "Undertime",
-      value: formatMinutes(undertimeMinutes),
+      value: Formatter.duration(undertimeMinutes),
     },
     {
       label: "Night Differential",
-      value: "0 hrs",
+      value: Formatter.duration(nightDiffMinutes),
     },
   ];
 
@@ -213,7 +194,11 @@ const Dashboard = () => {
                 <CardDescription>{formatFullDate(now)}</CardDescription>
               </div>
 
-              <InlineMetric icon={Clock3} label="Time" value={formatClock(now)} />
+              <InlineMetric
+                icon={Clock3}
+                label="Time"
+                value={formatClock(now)}
+              />
             </div>
           </CardHeader>
           <CardContent>
@@ -227,7 +212,7 @@ const Dashboard = () => {
                 <InfoPanel
                   icon={Timer}
                   label="Hours Logged"
-                  value={todayTotal}
+                  value={Formatter.duration(workedMinutes)}
                 />
                 <InfoPanel label="Attendance Status" value={statusLabel} />
               </div>
@@ -293,7 +278,10 @@ const Dashboard = () => {
                   label="Punch Out"
                   value={Formatter.time(todayRecord?.timeOut)}
                 />
-                <PunchCell label="Total Logged" value={todayTotal} />
+                <PunchCell
+                  label="Total Logged"
+                  value={Formatter.duration(workedMinutes)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -310,11 +298,14 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground">
                   Loading attendance records...
                 </p>
-              ) : collections.length ? (
+              ) : attendanceRecords.length ? (
                 <>
                   <div className="grid gap-3 md:hidden">
-                    {collections.map((record) => (
-                      <HistoryCard key={record.id} record={record} />
+                    {attendanceRecords.map((record, index) => (
+                      <HistoryCard
+                        key={record.id || `${record.userId}-${index}`}
+                        record={record}
+                      />
                     ))}
                   </div>
 
@@ -329,17 +320,23 @@ const Dashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {collections.map((record) => (
-                        <TableRow key={record.id}>
+                      {attendanceRecords.map((record, index) => (
+                        <TableRow
+                          key={record.id || `${record.userId}-${index}`}
+                        >
                           <TableCell>
                             <div className="font-medium">
                               {Formatter.date(record.timeIn)}
                             </div>
                           </TableCell>
                           <TableCell>{Formatter.time(record.timeIn)}</TableCell>
-                          <TableCell>{Formatter.time(record.timeOut)}</TableCell>
+                          <TableCell>
+                            {Formatter.time(record.timeOut)}
+                          </TableCell>
                           <TableCell className="font-medium">
-                            {formatDuration(record.timeIn, record.timeOut)}
+                            {Formatter.duration(
+                              record?.totalLoggedMinutes || "",
+                            )}
                           </TableCell>
                           <TableCell>
                             <AttendanceStatus status={record.status} />
@@ -360,19 +357,6 @@ const Dashboard = () => {
       </div>
     </main>
   );
-};
-
-const formatDuration = (timeIn, timeOut) => {
-  const start = toDate(timeIn);
-  const end = toDate(timeOut);
-
-  if (!start || !end) return "-";
-
-  const totalMinutes = Math.max(0, Math.floor((end - start) / 60000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
 };
 
 const InlineMetric = ({ icon, label, value }) => {
@@ -431,7 +415,7 @@ const HistoryCard = ({ record }) => (
       <MobileHistoryMetric label="Out" value={Formatter.time(record.timeOut)} />
       <MobileHistoryMetric
         label="Total"
-        value={formatDuration(record.timeIn, record.timeOut)}
+        value={Formatter.duration(record.totalLoggedMinutes)}
       />
     </div>
   </div>
