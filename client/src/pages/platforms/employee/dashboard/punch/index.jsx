@@ -1,4 +1,37 @@
-const Punch = () => {
+import { InfoPanel, InlineMetric } from "../components";
+import { Formatter } from "@/services/utilities";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Clock3,
+  Timer,
+  UserCheck,
+  CalendarClock,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+const formatFullDate = (date) =>
+  date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+const Punch = ({
+  shiftLabel,
+  workedMinutes,
+  statusLabel,
+  todayRecord,
+  isSubmitting,
+  isPunchedIn,
+  handlePunch = () => {},
+}) => {
+  const now = new Date();
   return (
     <Card>
       <CardHeader>
@@ -8,7 +41,11 @@ const Punch = () => {
             <CardDescription>{formatFullDate(now)}</CardDescription>
           </div>
 
-          <InlineMetric icon={Clock3} label="Time" value={formatClock(now)} />
+          <InlineMetric
+            icon={Clock3}
+            label="Time"
+            value={Formatter.time(now)}
+          />
         </div>
       </CardHeader>
       <CardContent>
@@ -21,10 +58,14 @@ const Punch = () => {
             />
             <InfoPanel
               icon={Timer}
-              label="Hours Logged"
+              label="Current Session"
               value={Formatter.duration(workedMinutes)}
             />
-            <InfoPanel label="Attendance Status" value={statusLabel} />
+            <InfoPanel
+              icon={UserCheck}
+              label="Attendance Status"
+              value={statusLabel}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
