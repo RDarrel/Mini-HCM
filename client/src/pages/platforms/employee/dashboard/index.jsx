@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ArrowDownToLine,
   ArrowUpFromLine,
   CalendarClock,
   CheckCircle2,
+  ClipboardList,
   Clock3,
+  History,
   Timer,
+  UserCheck,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { BROWSE, PUNCH } from "@/services/redux/slices/attendance";
@@ -43,6 +47,19 @@ const formatFullDate = (date) =>
     day: "numeric",
   });
 
+const getRecordMinutes = (record) => {
+  if (Number.isFinite(record?.totalLoggedMinutes)) {
+    return record.totalLoggedMinutes;
+  }
+
+  if (!record?.timeIn || !record?.timeOut) return 0;
+
+  return Math.floor(
+    (new Date(record.timeOut).getTime() - new Date(record.timeIn).getTime()) /
+      (1000 * 60),
+  );
+};
+
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { auth = {} } = useSelector(({ auth }) => auth);
@@ -66,7 +83,7 @@ const Dashboard = () => {
     return () => window.clearInterval(interval);
   }, []);
 
-  const todayRecord = useMemo(() => collections[0] || null, [collections, now]);
+  const todayRecord = useMemo(() => collections[0] || null, [collections]);
 
   const {
     regularMinutes,
@@ -75,7 +92,7 @@ const Dashboard = () => {
     lateMinutes,
     undertimeMinutes,
     totalLoggedMinutes,
-  } = utils?.compute.dailySummary(todayRecord, schedule);
+  } = utils.compute.dailySummary(todayRecord, schedule);
 
   const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
   const workedMinutes = totalLoggedMinutes;
@@ -89,22 +106,27 @@ const Dashboard = () => {
     {
       label: "Regular Hours",
       value: Formatter.duration(regularMinutes),
+      icon: Clock3,
     },
     {
       label: "Overtime",
       value: Formatter.duration(overtimeMinutes),
+      icon: Timer,
     },
     {
       label: "Late",
       value: Formatter.duration(lateMinutes),
+      icon: Activity,
     },
     {
       label: "Undertime",
       value: Formatter.duration(undertimeMinutes),
+      icon: CalendarClock,
     },
     {
       label: "Night Differential",
       value: Formatter.duration(nightDiffMinutes),
+      icon: History,
     },
   ];
 
@@ -119,8 +141,8 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="min-h-[calc(100vh-3.25rem)] p-4 sm:p-6">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+    <main className="min-h-[calc(100vh-3.25rem)] bg-muted/20 p-4 sm:p-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -149,7 +171,11 @@ const Dashboard = () => {
                   label="Current Session"
                   value={Formatter.duration(workedMinutes)}
                 />
-                <InfoPanel label="Attendance Status" value={statusLabel} />
+                <InfoPanel
+                  icon={UserCheck}
+                  label="Attendance Status"
+                  value={statusLabel}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
@@ -176,7 +202,7 @@ const Dashboard = () => {
         </Card>
 
         <section className="grid gap-4">
-          <Card>
+          <Card className="border-border/70 shadow-sm">
             <CardHeader>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -185,26 +211,33 @@ const Dashboard = () => {
                     Payroll breakdown for the current workday.
                   </CardDescription>
                 </div>
-                <Badge variant="outline">{progress}% completed</Badge>
+                <ClipboardList className="mt-1 size-5 text-muted-foreground" />
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                  <span>Progress</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
                 {summaryItems.map((item) => (
                   <SummaryBox
                     key={item.label}
+                    icon={item.icon}
                     label={item.label}
                     value={item.value}
                   />
                 ))}
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 rounded-md border bg-muted/20 p-3 sm:grid-cols-3">
                 <PunchCell
                   label="Punch In"
                   value={Formatter.time(todayRecord?.timeIn)}
@@ -221,18 +254,23 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/70 shadow-sm">
             <CardHeader>
-              <CardTitle>Attendance History</CardTitle>
-              <CardDescription>
-                Recent attendance records from your account.
-              </CardDescription>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle>Attendance History</CardTitle>
+                  <CardDescription>
+                    Recent attendance records from your account.
+                  </CardDescription>
+                </div>
+                <History className="mt-1 size-5 text-muted-foreground" />
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <p className="text-sm text-muted-foreground">
+                <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">
                   Loading attendance records...
-                </p>
+                </div>
               ) : collections.length ? (
                 <>
                   <div className="grid gap-3 md:hidden">
@@ -244,53 +282,52 @@ const Dashboard = () => {
                     ))}
                   </div>
 
-                  <Table className="hidden md:table">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Punch In</TableHead>
-                        <TableHead>Punch Out</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {collections.map((record, index) => (
-                        <TableRow
-                          key={record.id || `${record.userId}-${index}`}
-                        >
-                          <TableCell>
-                            <div className="font-medium">
-                              {Formatter.date(record.timeIn)}
-                            </div>
-                          </TableCell>
-                          <TableCell>{Formatter.time(record.timeIn)}</TableCell>
-                          <TableCell>
-                            {Formatter.time(record.timeOut)}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {record?.timeOut
-                              ? Formatter.duration(
-                                  Math.floor(
-                                    (new Date(record?.timeOut).getTime() -
-                                      new Date(record?.timeIn).getTime()) /
-                                      (1000 * 60),
-                                  ),
-                                )
-                              : "-"}
-                          </TableCell>
-                          <TableCell>
-                            <AttendanceStatus status={record.status} />
-                          </TableCell>
+                  <div className="hidden overflow-hidden rounded-md border md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                          <TableHead>Date</TableHead>
+                          <TableHead>Punch In</TableHead>
+                          <TableHead>Punch Out</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead className="text-right">Status</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {collections.map((record, index) => (
+                          <TableRow
+                            key={record.id || `${record.userId}-${index}`}
+                            className="hover:bg-muted/30"
+                          >
+                            <TableCell>
+                              <div className="font-medium">
+                                {Formatter.date(record.timeIn)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="tabular-nums">
+                              {Formatter.time(record.timeIn)}
+                            </TableCell>
+                            <TableCell className="tabular-nums">
+                              {Formatter.time(record.timeOut)}
+                            </TableCell>
+                            <TableCell className="font-medium tabular-nums">
+                              {record?.timeOut
+                                ? Formatter.duration(getRecordMinutes(record))
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <AttendanceStatus status={record.status} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <div className="rounded-md border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
                   No attendance records yet.
-                </p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -326,24 +363,33 @@ const InfoPanel = ({ icon, label, value }) => {
   );
 };
 
-const SummaryBox = ({ label, value }) => (
-  <div className="rounded-lg border bg-muted/30 p-3">
-    <p className="text-xs font-medium text-muted-foreground">{label}</p>
-    <p className="mt-2 text-lg font-semibold tabular-nums">{value}</p>
-  </div>
-);
+const SummaryBox = ({ icon, label, value }) => {
+  const SummaryIcon = icon;
+
+  return (
+    <div className="rounded-md border bg-background p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        {SummaryIcon && (
+          <SummaryIcon className="size-4 text-muted-foreground" />
+        )}
+      </div>
+      <p className="mt-2 text-lg font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+};
 
 const PunchCell = ({ label, value }) => (
-  <div className="rounded-lg border bg-background p-3">
+  <div>
     <p className="text-sm text-muted-foreground">{label}</p>
     <p className="mt-1 font-semibold tabular-nums">{value}</p>
   </div>
 );
 
 const HistoryCard = ({ record }) => (
-  <div className="rounded-lg border bg-background p-3">
+  <div className="rounded-md border bg-background p-3">
     <div className="flex items-start justify-between gap-3">
-      <div>
+      <div className="min-w-0">
         <p className="font-medium">{Formatter.date(record.timeIn)}</p>
         <p className="text-xs text-muted-foreground">
           {Formatter.time(record.timeIn)} - {Formatter.time(record.timeOut)}
@@ -351,28 +397,30 @@ const HistoryCard = ({ record }) => (
       </div>
       <AttendanceStatus status={record.status} />
     </div>
-    <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+    <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-muted/30 p-2 text-sm">
       <MobileHistoryMetric label="In" value={Formatter.time(record.timeIn)} />
       <MobileHistoryMetric label="Out" value={Formatter.time(record.timeOut)} />
       <MobileHistoryMetric
         label="Total"
-        value={Formatter.duration(record.totalLoggedMinutes)}
+        value={
+          record?.timeOut ? Formatter.duration(getRecordMinutes(record)) : "-"
+        }
       />
     </div>
   </div>
 );
 
 const AttendanceStatus = ({ status }) => (
-  <Badge variant="outline">
+  <Badge variant="outline" className="inline-flex gap-1.5 rounded-md">
     {status === "Completed" && <CheckCircle2 className="size-3" />}
     {status || "Pending"}
   </Badge>
 );
 
 const MobileHistoryMetric = ({ label, value }) => (
-  <div>
+  <div className="min-w-0">
     <p className="text-xs text-muted-foreground">{label}</p>
-    <p className="font-medium tabular-nums">{value}</p>
+    <p className="truncate font-medium tabular-nums">{value}</p>
   </div>
 );
 
