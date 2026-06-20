@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { DateTime } from "luxon";
 import { useDispatch, useSelector } from "react-redux";
 import { BROWSE, PUNCH } from "@/services/redux/slices/attendance";
 import { Formatter } from "@/services/utilities";
@@ -12,6 +13,7 @@ const DEFAULT_SCHEDULE = {
   start: "09:00",
   end: "18:00",
 };
+const DEFAULT_TIMEZONE = "Asia/Manila";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -22,7 +24,9 @@ const Dashboard = () => {
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
+  const timezone = auth?.timezone || DEFAULT_TIMEZONE;
   const scheduledMinutes = utils.compute.scheduleMinutes(schedule);
+  const todayIso = DateTime.fromJSDate(now).setZone(timezone).toISODate();
 
   useEffect(() => {
     dispatch(BROWSE());
@@ -34,7 +38,13 @@ const Dashboard = () => {
     return () => window.clearInterval(interval);
   }, []);
 
-  const todayRecord = useMemo(() => collections[0] || null, [collections]);
+  const todayRecord = useMemo(
+    () =>
+      collections?.find(
+        ({ workDate = "" }) => workDate === todayIso,
+      ) || null,
+    [collections, todayIso],
+  );
 
   const {
     regularMinutes,
@@ -43,7 +53,7 @@ const Dashboard = () => {
     lateMinutes,
     undertimeMinutes,
     totalLoggedMinutes,
-  } = utils.compute.dailySummary(todayRecord, schedule);
+  } = utils.compute.dailySummary(todayRecord, schedule, timezone);
 
   const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
   const workedMinutes = totalLoggedMinutes;
@@ -52,7 +62,7 @@ const Dashboard = () => {
     Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
   );
 
-  const shiftLabel = utils.shiftLabel(auth?.schedule);
+  const shiftLabel = utils.shiftLabel(auth?.schedule, timezone);
   const statusLabel = utils.statusLabel(todayRecord);
 
   const summaryItems = [
@@ -104,9 +114,9 @@ const Dashboard = () => {
           workedMinutes={workedMinutes}
           shiftLabel={shiftLabel}
           statusLabel={statusLabel}
-          todayRecord={todayRecord}
           isSubmitting={isSubmitting}
           now={now}
+          timezone={timezone}
         />
 
         <section className="grid gap-4">
@@ -115,8 +125,9 @@ const Dashboard = () => {
             summaryItems={summaryItems}
             workedMinutes={workedMinutes}
             todayRecord={todayRecord}
+            timezone={timezone}
           />
-          <AttHistory record={todayRecord} />
+          <AttHistory timezone={timezone} />
         </section>
       </div>
     </main>

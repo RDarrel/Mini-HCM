@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { InfoPanel, InlineMetric } from "../components";
 import { Formatter } from "@/services/utilities";
 import {
@@ -16,12 +17,8 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-const formatFullDate = (date) =>
-  date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+const formatFullDate = (date, timezone) =>
+  DateTime.fromJSDate(date).setZone(timezone).toFormat("cccc, LLLL d");
 const Punch = ({
   shiftLabel = "",
   statusLabel = "",
@@ -29,7 +26,7 @@ const Punch = ({
   isPunchedIn = false,
   workedMinutes = 0,
   now = new Date(),
-  todayRecord = {},
+  timezone = "Asia/Manila",
   handlePunch = () => {},
 }) => {
   return (
@@ -38,13 +35,13 @@ const Punch = ({
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <CardTitle>Employee Dashboard</CardTitle>
-            <CardDescription>{formatFullDate(now)}</CardDescription>
+            <CardDescription>{formatFullDate(now, timezone)}</CardDescription>
           </div>
 
           <InlineMetric
             icon={Clock3}
             label="Time"
-            value={Formatter.time(now)}
+            value={Formatter.time(now, timezone)}
           />
         </div>
       </CardHeader>

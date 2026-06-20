@@ -1,38 +1,59 @@
+const { DateTime } = require("luxon");
+
 const toJSDate = (value) => {
   if (!value) return null;
   if (value.toDate) return value.toDate();
   return new Date(value);
 };
 
-const getShiftDateTime = (baseDate, timeString) => {
+const toDateTime = (value, timezone = "Asia/Manila") => {
+  const date = toJSDate(value);
+
+  return DateTime.fromJSDate(date).setZone(timezone);
+};
+
+const getShiftDateTime = (baseDateTime, timeString) => {
   const [hour, minute] = timeString.split(":").map(Number);
 
-  const date = new Date(baseDate);
-  date.setHours(hour, minute, 0, 0);
-
-  return date;
+  return baseDateTime.set({
+    hour,
+    minute,
+    second: 0,
+    millisecond: 0,
+  });
 };
 
 const diffInMinutes = (start, end) => {
-  return Math.max(0, Math.floor((end - start) / 60000));
+  return Math.max(0, Math.floor(end.diff(start, "minutes").minutes));
+};
+
+const maxDateTime = (a, b) => {
+  return a > b ? a : b;
+};
+
+const minDateTime = (a, b) => {
+  return a < b ? a : b;
 };
 
 // Night differential is counted only from 10 PM to 6 AM.
 const computeNightDifferential = (timeIn, timeOut) => {
-  const ndWindowStart = new Date(timeIn);
-  ndWindowStart.setHours(22, 0, 0, 0); // 10 PM
+  const ndWindowStart = timeIn.set({
+    hour: 22,
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+  }); // 10 PM
 
-  const ndWindowEnd = new Date(ndWindowStart);
-  ndWindowEnd.setDate(ndWindowEnd.getDate() + 1);
-  ndWindowEnd.setHours(6, 0, 0, 0); // 6 AM next day
+  const ndWindowEnd = ndWindowStart.plus({ days: 1 }).set({
+    hour: 6,
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+  }); // 6 AM next day
 
-  const overlapStart = new Date(
-    Math.max(timeIn.getTime(), ndWindowStart.getTime()),
-  );
+  const overlapStart = maxDateTime(timeIn, ndWindowStart);
 
-  const overlapEnd = new Date(
-    Math.min(timeOut.getTime(), ndWindowEnd.getTime()),
-  );
+  const overlapEnd = minDateTime(timeOut, ndWindowEnd);
 
   // No overlap
   if (overlapEnd <= overlapStart) {
@@ -45,40 +66,46 @@ const computeNightDifferential = (timeIn, timeOut) => {
 };
 
 // Computes attendance metrics using actual time in/out and assigned schedule.
-const computeDailySummary = ({ timeIn, timeOut, schedule }) => {
-  const shiftStart = getShiftDateTime(timeIn, schedule.start);
-  const shiftEnd = getShiftDateTime(timeIn, schedule.end);
+const computeDailySummary = ({
+  timeIn,
+  timeOut,
+  schedule,
+  timezone = "Asia/Manila",
+}) => {
+  const timeInDT = toDateTime(timeIn, timezone);
+  const timeOutDT = toDateTime(timeOut, timezone);
+
+  let shiftStart = getShiftDateTime(timeInDT, schedule.start);
+  let shiftEnd = getShiftDateTime(timeInDT, schedule.end);
 
   // Night shift: the end time belongs to the next day.
   // Example:
   // 22:00 - 06:00
   // June 20 10PM -> June 21 6AM
   if (shiftEnd <= shiftStart) {
-    shiftEnd.setDate(shiftEnd.getDate() + 1);
+    shiftEnd = shiftEnd.plus({ days: 1 });
   }
 
-  const lateMinutes = diffInMinutes(shiftStart, timeIn);
-  const undertimeMinutes = diffInMinutes(timeOut, shiftEnd);
+  const lateMinutes = diffInMinutes(shiftStart, timeInDT);
+  const undertimeMinutes = diffInMinutes(timeOutDT, shiftEnd);
 
-  const regularStart = new Date(
-    Math.max(timeIn.getTime(), shiftStart.getTime()),
-  );
+  const regularStart = maxDateTime(timeInDT, shiftStart);
 
-  const regularEnd = new Date(Math.min(timeOut.getTime(), shiftEnd.getTime()));
+  const regularEnd = minDateTime(timeOutDT, shiftEnd);
 
   const regularMinutes =
     regularEnd > regularStart ? diffInMinutes(regularStart, regularEnd) : 0;
 
   const overtimeMinutes =
-    regularMinutes > 0 ? diffInMinutes(shiftEnd, timeOut) : 0;
+    regularMinutes > 0 ? diffInMinutes(shiftEnd, timeOutDT) : 0;
 
   return {
     regularMinutes,
     overtimeMinutes,
-    nightDiffMinutes: computeNightDifferential(timeIn, timeOut),
+    nightDiffMinutes: computeNightDifferential(timeInDT, timeOutDT),
     lateMinutes,
     undertimeMinutes,
-    totalLoggedMinutes: diffInMinutes(timeIn, timeOut),
+    totalLoggedMinutes: diffInMinutes(timeInDT, timeOutDT),
   };
 };
 

@@ -1,14 +1,12 @@
+import { DateTime } from "luxon";
 import toJSDate from "./toJSDate";
-const time = (timestamp) => {
+
+const time = (timestamp, timezone = "Asia/Manila") => {
   if (!timestamp) return "-";
 
-  const date = toJSDate(timestamp);
+  const jsDate = toJSDate(timestamp);
 
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  return DateTime.fromJSDate(jsDate).setZone(timezone).toFormat("h:mm a");
 };
 
 export default time;

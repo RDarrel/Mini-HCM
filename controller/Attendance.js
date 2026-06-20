@@ -1,21 +1,23 @@
 const { db, admin } = require("../config/firebase");
+const { DateTime } = require("luxon");
 const { computeDailySummary } = require("../utilities/attendance");
 
 // Determines the work date used for attendance records.
-const getWorkDate = (date, schedule) => {
+const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
   const [startHour] = schedule.start.split(":").map(Number);
   const [endHour] = schedule.end.split(":").map(Number);
 
-  const workDate = new Date(date);
+  let workDate = DateTime.fromJSDate(date).setZone(timezone);
+
   const isNightShift = endHour <= startHour;
   // Night shift example:
   // Schedule: 22:00 - 06:00
   // Punch at 05:00 AM should still belong to the previous work day.
-  if (isNightShift && date.getHours() < endHour) {
-    workDate.setDate(workDate.getDate() - 1);
+  if (isNightShift && workDate.hour < endHour) {
+    workDate = workDate.minus({ days: 1 });
   }
 
-  return workDate.toISOString().slice(0, 10);
+  return workDate.toFormat("yyyy-MM-dd");
 };
 exports.browse = async (req, res) => {
   try {
@@ -39,12 +41,12 @@ exports.browse = async (req, res) => {
 };
 
 // Validates punch in/out requests and enforces attendance rules.
-const punchValidation = async ({ userId, punchType, schedule }) => {
+const punchValidation = async ({ userId, punchType, schedule, timezone }) => {
   if (!["in", "out"].includes(punchType)) {
     throw new Error("Invalid punch type");
   }
   const now = new Date();
-  const workDate = getWorkDate(now, schedule);
+  const workDate = getWorkDate(now, schedule, timezone);
 
   // Check if the employee has an active attendance record.
   const openAttSnapshot = await db
@@ -80,12 +82,13 @@ const punchValidation = async ({ userId, punchType, schedule }) => {
   return { workDate, attendanceDoc };
 };
 
-const punchIn = async ({ userId, workDate }) => {
+const punchIn = async ({ userId, workDate, timezone }) => {
   const docRef = await db.collection("attendance").add({
     userId,
     workDate,
     timeIn: admin.firestore.FieldValue.serverTimestamp(),
     timeOut: null,
+    timezone,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
@@ -114,6 +117,7 @@ const punchOut = async ({ schedule, attendanceDoc }) => {
     timeIn: attendance.timeIn.toDate(),
     timeOut: attendance.timeOut.toDate(),
     schedule,
+    timezone,
   });
 
   // Store computed attendance metrics to avoid recalculation.
@@ -123,19 +127,19 @@ const punchOut = async ({ schedule, attendanceDoc }) => {
     workDate: attendance.workDate,
     ...summary,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    timezone: attendance.timezone,
   });
 
   return {
     id: attendanceDoc.id,
     ...attendance,
-    summary,
   };
 };
 
 exports.punch = async (req, res) => {
   try {
     const { punchType } = req.body;
-    const { schedule, uid: userId } = req.user;
+    const { schedule, uid: userId, timezone = "Asia/Manila" } = req.user;
     if (!punchType) {
       return res.status(400).json({
         error: "Punch type is required!",
@@ -152,14 +156,16 @@ exports.punch = async (req, res) => {
       userId,
       punchType,
       schedule,
+      timezone,
     });
 
     const data =
       punchType === "in"
-        ? await punchIn({ userId, workDate })
+        ? await punchIn({ userId, workDate, timezone })
         : await punchOut({
             schedule,
             attendanceDoc,
+            timezone,
           });
 
     res.json({

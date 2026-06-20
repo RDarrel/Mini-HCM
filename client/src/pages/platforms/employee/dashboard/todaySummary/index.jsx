@@ -14,6 +14,7 @@ const TodaySummary = ({
   summaryItems,
   todayRecord,
   workedMinutes,
+  timezone = "Asia/Manila",
 }) => {
   return (
     <Card className="border-border/70 shadow-sm">
@@ -54,11 +55,11 @@ const TodaySummary = ({
         <div className="grid gap-3 rounded-md border bg-muted/20 p-3 sm:grid-cols-3">
           <PunchCell
             label="Punch In"
-            value={Formatter.time(todayRecord?.timeIn)}
+            value={Formatter.time(todayRecord?.timeIn, timezone)}
           />
           <PunchCell
             label="Punch Out"
-            value={Formatter.time(todayRecord?.timeOut)}
+            value={Formatter.time(todayRecord?.timeOut, timezone)}
           />
           <PunchCell
             label="Total Logged"

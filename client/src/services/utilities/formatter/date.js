@@ -1,18 +1,14 @@
+import { DateTime } from "luxon";
 import toJSDate from "./toJSDate";
-const date = (timestamp, withTime = false) => {
+
+const date = (timestamp, withTime = false, timezone = "Asia/Manila") => {
   if (!timestamp) return "-";
 
-  const date = toJSDate(timestamp);
+  const jsDate = toJSDate(timestamp);
 
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    ...(withTime && {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  });
+  const dateTime = DateTime.fromJSDate(jsDate).setZone(timezone);
+
+  return dateTime.toFormat(withTime ? "MMM dd, yyyy hh:mm a" : "MMM dd, yyyy");
 };
 
 export default date;

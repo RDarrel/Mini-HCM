@@ -25,13 +25,15 @@ const getRecordMinutes = (record) => {
 
   if (!record?.timeIn || !record?.timeOut) return 0;
 
+  const timeIn = Formatter.toJSDate(record.timeIn);
+  const timeOut = Formatter.toJSDate(record.timeOut);
+
   return Math.floor(
-    (new Date(record.timeOut).getTime() - new Date(record.timeIn).getTime()) /
-      (1000 * 60),
+    (timeOut.getTime() - timeIn.getTime()) / (1000 * 60),
   );
 };
 
-const AttHistory = () => {
+const AttHistory = ({ timezone = "Asia/Manila" }) => {
   const { collections = [], isLoading } = useSelector(
     ({ attendance }) => attendance,
   );
@@ -60,6 +62,7 @@ const AttHistory = () => {
                 <HistoryCard
                   key={record.id || `${record.userId}-${index}`}
                   record={record}
+                  timezone={timezone}
                 />
               ))}
             </div>
@@ -83,14 +86,14 @@ const AttHistory = () => {
                     >
                       <TableCell>
                         <div className="font-medium">
-                          {Formatter.date(record.timeIn)}
+                          {Formatter.date(record.timeIn, false, timezone)}
                         </div>
                       </TableCell>
                       <TableCell className="tabular-nums">
-                        {Formatter.time(record.timeIn)}
+                        {Formatter.time(record.timeIn, timezone)}
                       </TableCell>
                       <TableCell className="tabular-nums">
-                        {Formatter.time(record.timeOut)}
+                        {Formatter.time(record.timeOut, timezone)}
                       </TableCell>
                       <TableCell className="font-medium tabular-nums">
                         {record?.timeOut
@@ -118,20 +121,29 @@ const AttHistory = () => {
 
 export default AttHistory;
 
-const HistoryCard = ({ record }) => (
+const HistoryCard = ({ record, timezone = "Asia/Manila" }) => (
   <div className="rounded-md border bg-background p-3">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <p className="font-medium">{Formatter.date(record.timeIn)}</p>
+        <p className="font-medium">
+          {Formatter.date(record.timeIn, false, timezone)}
+        </p>
         <p className="text-xs text-muted-foreground">
-          {Formatter.time(record.timeIn)} - {Formatter.time(record.timeOut)}
+          {Formatter.time(record.timeIn, timezone)} -{" "}
+          {Formatter.time(record.timeOut, timezone)}
         </p>
       </div>
       <AttendanceStatus status={record.status} />
     </div>
     <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-muted/30 p-2 text-sm">
-      <MobileHistoryMetric label="In" value={Formatter.time(record.timeIn)} />
-      <MobileHistoryMetric label="Out" value={Formatter.time(record.timeOut)} />
+      <MobileHistoryMetric
+        label="In"
+        value={Formatter.time(record.timeIn, timezone)}
+      />
+      <MobileHistoryMetric
+        label="Out"
+        value={Formatter.time(record.timeOut, timezone)}
+      />
       <MobileHistoryMetric
         label="Total"
         value={

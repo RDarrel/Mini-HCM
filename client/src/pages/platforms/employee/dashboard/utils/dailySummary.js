@@ -1,45 +1,60 @@
+import { DateTime } from "luxon";
 import { Formatter } from "@/services/utilities";
 const { toJSDate } = Formatter;
-const getShiftDateTime = (baseDate, timeString) => {
+const DEFAULT_TIMEZONE = "Asia/Manila";
+
+const toDateTime = (timestamp, timezone) =>
+  DateTime.fromJSDate(toJSDate(timestamp)).setZone(timezone);
+
+const getShiftDateTime = (baseDateTime, timeString) => {
   const [hour, minute] = timeString.split(":").map(Number);
 
-  const date = new Date(baseDate);
-  date.setHours(hour, minute, 0, 0);
-
-  return date;
+  return baseDateTime.set({
+    hour,
+    minute,
+    second: 0,
+    millisecond: 0,
+  });
 };
 
 const diffInMinutes = (start, end) => {
-  return Math.max(0, Math.floor((end - start) / 60000));
+  return Math.max(0, Math.floor(end.diff(start, "minutes").minutes));
 };
 
 // Night differential is counted only from 10 PM to 6 AM.
 const computeNightDifferential = (timeIn, timeOut) => {
-  const ndWindowStart = new Date(timeIn);
-  ndWindowStart.setHours(22, 0, 0, 0); // 10 PM
+  let totalMinutes = 0;
+  let windowDate = timeIn.startOf("day").minus({ days: 1 });
 
-  const ndWindowEnd = new Date(ndWindowStart);
-  ndWindowEnd.setDate(ndWindowEnd.getDate() + 1);
-  ndWindowEnd.setHours(6, 0, 0, 0); // 6 AM next day
+  while (windowDate <= timeOut) {
+    const ndWindowStart = windowDate.set({
+      hour: 22,
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+    });
+    const ndWindowEnd = ndWindowStart.plus({ hours: 8 });
+    const overlapStart =
+      timeIn.toMillis() > ndWindowStart.toMillis() ? timeIn : ndWindowStart;
+    const overlapEnd =
+      timeOut.toMillis() < ndWindowEnd.toMillis() ? timeOut : ndWindowEnd;
 
-  const overlapStart = new Date(
-    Math.max(timeIn.getTime(), ndWindowStart.getTime()),
-  );
+    if (overlapEnd > overlapStart) {
+      totalMinutes += diffInMinutes(overlapStart, overlapEnd);
+    }
 
-  const overlapEnd = new Date(
-    Math.min(timeOut.getTime(), ndWindowEnd.getTime()),
-  );
-
-  // No overlap
-  if (overlapEnd <= overlapStart) {
-    return 0;
+    windowDate = windowDate.plus({ days: 1 });
   }
 
-  return diffInMinutes(overlapStart, overlapEnd);
+  return totalMinutes;
 };
 
 // Computes attendance metrics using actual time in/out and assigned schedule.
-const computeDailySummary = (attendance, schedule) => {
+const computeDailySummary = (
+  attendance,
+  schedule,
+  timezone = DEFAULT_TIMEZONE,
+) => {
   if (!attendance || !schedule)
     return {
       regularMinutes: 0,
@@ -50,28 +65,29 @@ const computeDailySummary = (attendance, schedule) => {
       totalLoggedMinutes: 0,
     };
 
-  const timeIn = toJSDate(attendance.timeIn);
-  const timeOut = toJSDate(attendance.timeOut || new Date());
+  const timeIn = toDateTime(attendance.timeIn, timezone);
+  const timeOut = attendance?.timeOut
+    ? toDateTime(attendance.timeOut, timezone)
+    : DateTime.now().setZone(timezone);
 
   const shiftStart = getShiftDateTime(timeIn, schedule.start);
-  const shiftEnd = getShiftDateTime(timeIn, schedule.end);
+  let shiftEnd = getShiftDateTime(timeIn, schedule.end);
 
   // Night shift: the end time belongs to the next day.
   // Example:
   // 22:00 - 06:00
   // June 20 10PM -> June 21 6AM
   if (shiftEnd <= shiftStart) {
-    shiftEnd.setDate(shiftEnd.getDate() + 1);
+    shiftEnd = shiftEnd.plus({ days: 1 });
   }
 
   const lateMinutes = diffInMinutes(shiftStart, timeIn);
   const undertimeMinutes = diffInMinutes(timeOut, shiftEnd);
 
-  const regularStart = new Date(
-    Math.max(timeIn.getTime(), shiftStart.getTime()),
-  );
-
-  const regularEnd = new Date(Math.min(timeOut.getTime(), shiftEnd.getTime()));
+  const regularStart =
+    timeIn.toMillis() > shiftStart.toMillis() ? timeIn : shiftStart;
+  const regularEnd =
+    timeOut.toMillis() < shiftEnd.toMillis() ? timeOut : shiftEnd;
 
   const regularMinutes =
     regularEnd > regularStart ? diffInMinutes(regularStart, regularEnd) : 0;
