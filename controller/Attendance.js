@@ -1,20 +1,22 @@
 const { db, admin } = require("../config/firebase");
 const { computeDailySummary } = require("../utilities/attendance");
 
+// Determines the work date used for attendance records.
 const getWorkDate = (date, schedule) => {
   const [startHour] = schedule.start.split(":").map(Number);
   const [endHour] = schedule.end.split(":").map(Number);
 
   const workDate = new Date(date);
   const isNightShift = endHour <= startHour;
-
+  // Night shift example:
+  // Schedule: 22:00 - 06:00
+  // Punch at 05:00 AM should still belong to the previous work day.
   if (isNightShift && date.getHours() < endHour) {
     workDate.setDate(workDate.getDate() - 1);
   }
 
   return workDate.toISOString().slice(0, 10);
 };
-
 exports.browse = async (req, res) => {
   try {
     const snapshot = await db
@@ -36,41 +38,43 @@ exports.browse = async (req, res) => {
   }
 };
 
+// Validates punch in/out requests and enforces attendance rules.
 const punchValidation = async ({ userId, punchType, schedule }) => {
   if (!["in", "out"].includes(punchType)) {
     throw new Error("Invalid punch type");
   }
-
   const now = new Date();
   const workDate = getWorkDate(now, schedule);
 
-  const snapshot = await db
+  // Check if the employee has an active attendance record.
+  const openAttSnapshot = await db
     .collection("attendance")
     .where("userId", "==", userId)
-    .where("workDate", "==", workDate)
+    .where("timeOut", "==", null)
     .limit(1)
     .get();
 
-  const attendanceDoc = snapshot.empty ? null : snapshot.docs[0];
-  const attendance = attendanceDoc ? attendanceDoc.data() : null;
+  const attendanceDoc = openAttSnapshot.empty ? null : openAttSnapshot.docs[0];
   if (punchType === "in") {
-    if (attendance?.timeIn && !attendance?.timeOut) {
-      throw new Error("You already punched in. Please punch out first.");
+    if (!openAttSnapshot.empty) {
+      throw new Error("You are already punched in. Please punch out first.");
     }
 
-    if (attendance?.timeIn && attendance?.timeOut) {
-      throw new Error("You already completed your shift.");
+    // Prevent creating more than one attendance record for the same work day.
+    const sameWorkDaySnapshot = await db
+      .collection("attendance")
+      .where("userId", "==", userId)
+      .where("workDate", "==", workDate)
+      .limit(1)
+      .get();
+
+    if (!sameWorkDaySnapshot.empty) {
+      throw new Error("Your shift is already completed.");
     }
   }
 
-  if (punchType === "out") {
-    if (!attendance?.timeIn) {
-      throw new Error("Punch In before Punch Out.");
-    }
-
-    if (attendance?.timeOut) {
-      throw new Error("You already punched out.");
-    }
+  if (openAttSnapshot.empty && punchType === "out") {
+    throw new Error("Please punch in first before punching out.");
   }
 
   return { workDate, attendanceDoc };
@@ -112,8 +116,11 @@ const punchOut = async ({ schedule, attendanceDoc }) => {
     schedule,
   });
 
+  // Store computed attendance metrics to avoid recalculation.
   await db.collection("dailySummary").add({
     attendanceId: attendanceDoc.id,
+    userId: attendance.userId,
+    workDate: attendance.workDate,
     ...summary,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });

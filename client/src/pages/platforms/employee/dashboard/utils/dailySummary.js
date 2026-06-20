@@ -13,6 +13,7 @@ const diffInMinutes = (start, end) => {
   return Math.max(0, Math.floor((end - start) / 60000));
 };
 
+// Night differential is counted only from 10 PM to 6 AM.
 const computeNightDifferential = (timeIn, timeOut) => {
   const ndWindowStart = new Date(timeIn);
   ndWindowStart.setHours(22, 0, 0, 0); // 10 PM
@@ -37,6 +38,7 @@ const computeNightDifferential = (timeIn, timeOut) => {
   return diffInMinutes(overlapStart, overlapEnd);
 };
 
+// Computes attendance metrics using actual time in/out and assigned schedule.
 const computeDailySummary = (attendance, schedule) => {
   if (!attendance || !schedule)
     return {
@@ -54,6 +56,10 @@ const computeDailySummary = (attendance, schedule) => {
   const shiftStart = getShiftDateTime(timeIn, schedule.start);
   const shiftEnd = getShiftDateTime(timeIn, schedule.end);
 
+  // Night shift: the end time belongs to the next day.
+  // Example:
+  // 22:00 - 06:00
+  // June 20 10PM -> June 21 6AM
   if (shiftEnd <= shiftStart) {
     shiftEnd.setDate(shiftEnd.getDate() + 1);
   }
@@ -70,10 +76,7 @@ const computeDailySummary = (attendance, schedule) => {
   const regularMinutes =
     regularEnd > regularStart ? diffInMinutes(regularStart, regularEnd) : 0;
 
-  const overtimeMinutes = diffInMinutes(shiftEnd, timeOut);
-  const totalLoggedMinutes = Math.floor(
-    (timeOut.getTime() - timeIn.getTime()) / (1000 * 60),
-  );
+  const overtimeMinutes = regularMinutes ? diffInMinutes(shiftEnd, timeOut) : 0;
 
   return {
     regularMinutes,
@@ -81,7 +84,7 @@ const computeDailySummary = (attendance, schedule) => {
     nightDiffMinutes: computeNightDifferential(timeIn, timeOut),
     lateMinutes,
     undertimeMinutes,
-    totalLoggedMinutes,
+    totalLoggedMinutes: diffInMinutes(timeIn, timeOut),
   };
 };
 
