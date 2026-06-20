@@ -27,7 +27,6 @@ const Dashboard = () => {
   const timezone = auth?.timezone || DEFAULT_TIMEZONE;
   const scheduledMinutes = utils.compute.scheduleMinutes(schedule);
   const todayIso = DateTime.fromJSDate(now).setZone(timezone).toISODate();
-
   useEffect(() => {
     dispatch(BROWSE());
   }, [dispatch]);
@@ -40,9 +39,7 @@ const Dashboard = () => {
 
   const todayRecord = useMemo(
     () =>
-      collections?.find(
-        ({ workDate = "" }) => workDate === todayIso,
-      ) || null,
+      collections?.find(({ workDate = "" }) => workDate === todayIso) || null,
     [collections, todayIso],
   );
 
@@ -96,9 +93,7 @@ const Dashboard = () => {
   const handlePunch = (punchType) => {
     dispatch(
       PUNCH({
-        userId: auth.uid,
         punchType,
-        schedule,
       }),
     )
       .unwrap()

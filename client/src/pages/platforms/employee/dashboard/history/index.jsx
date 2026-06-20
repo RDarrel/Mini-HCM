@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   Card,
   CardContent,
@@ -28,15 +29,15 @@ const getRecordMinutes = (record) => {
   const timeIn = Formatter.toJSDate(record.timeIn);
   const timeOut = Formatter.toJSDate(record.timeOut);
 
-  return Math.floor(
-    (timeOut.getTime() - timeIn.getTime()) / (1000 * 60),
-  );
+  return Math.floor((timeOut.getTime() - timeIn.getTime()) / (1000 * 60));
 };
 
-const AttHistory = ({ timezone = "Asia/Manila" }) => {
+const AttHistory = () => {
+  const { auth } = useSelector(({ auth }) => auth);
   const { collections = [], isLoading } = useSelector(
     ({ attendance }) => attendance,
   );
+  const { timezone = "Asia/Manila" } = auth;
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
@@ -119,9 +120,9 @@ const AttHistory = ({ timezone = "Asia/Manila" }) => {
   );
 };
 
-export default AttHistory;
+export default memo(AttHistory);
 
-const HistoryCard = ({ record, timezone = "Asia/Manila" }) => (
+const HistoryCard = memo(({ record, timezone = "Asia/Manila" }) => (
   <div className="rounded-md border bg-background p-3">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
@@ -152,7 +153,7 @@ const HistoryCard = ({ record, timezone = "Asia/Manila" }) => (
       />
     </div>
   </div>
-);
+));
 
 const AttendanceStatus = ({ status }) => (
   <Badge variant="outline" className="inline-flex gap-1.5 rounded-md">
