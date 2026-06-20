@@ -7,7 +7,7 @@ import utils from "./utils";
 import Punch from "./punch";
 import TodaySummary from "./todaySummary";
 import AttHistory from "./history";
-
+import { toast } from "sonner";
 const DEFAULT_SCHEDULE = {
   start: "09:00",
   end: "18:00",
@@ -90,7 +90,9 @@ const Dashboard = () => {
         punchType,
         schedule,
       }),
-    );
+    )
+      .unwrap()
+      .catch((error) => toast.error(error?.message || "Something went wrong"));
   };
 
   return (

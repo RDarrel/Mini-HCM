@@ -1,113 +1,166 @@
 const { db, admin } = require("../config/firebase");
 const { computeDailySummary } = require("../utilities/attendance");
 
+const getWorkDate = (date, schedule) => {
+  const [startHour] = schedule.start.split(":").map(Number);
+  const [endHour] = schedule.end.split(":").map(Number);
+
+  const workDate = new Date(date);
+  const isNightShift = endHour <= startHour;
+
+  if (isNightShift && date.getHours() < endHour) {
+    workDate.setDate(workDate.getDate() - 1);
+  }
+
+  return workDate.toISOString().slice(0, 10);
+};
+
 exports.browse = async (req, res) => {
   try {
     const snapshot = await db
       .collection("attendance")
       .orderBy("createdAt", "desc")
       .get();
-    const attendance = snapshot.docs.map((doc) => doc.data());
-    res.json({ message: "Attendance Browse Successfully", data: attendance });
+
+    const attendance = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({
+      message: "Attendance Browse Successfully",
+      data: attendance,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-const punchIn = async (userId) => {
-  try {
-    const docRef = await db.collection("attendance").add({
-      userId,
-      timeIn: admin.firestore.FieldValue.serverTimestamp(),
-      timeOut: null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    const doc = await docRef.get();
-    return { id: docRef.id, ...doc.data() };
-  } catch (error) {
-    console.log("Error in punchIn:", error.message);
-  }
-};
-
-const punchOut = async (userId, schedule) => {
-  try {
-    const snapshot = await db
-      .collection("attendance")
-      .where("userId", "==", userId)
-      .where("timeOut", "==", null)
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) {
-      throw new Error("Attendance record not found");
-    }
-
-    const doc = snapshot.docs[0];
-
-    await doc.ref.update({
-      timeOut: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    const updatedDoc = await doc.ref.get();
-    const attendance = updatedDoc.data();
-
-    const summary = computeDailySummary({
-      timeIn: attendance.timeIn.toDate(),
-      timeOut: attendance.timeOut.toDate(),
-      schedule,
-    });
-
-    // Add daily summary
-    await db
-      .collection("dailySummary")
-      .add({ attendanceId: doc.id, ...summary });
-
-    return { id: doc.id, ...attendance };
-  } catch (error) {
-    console.log("Error in punchOut:", error.message);
-  }
-};
-
-const punchValidation = async ({ userId, punchType }) => {
+const punchValidation = async ({ userId, punchType, schedule }) => {
   if (!["in", "out"].includes(punchType)) {
     throw new Error("Invalid punch type");
   }
 
-  const openSnapshot = await db
+  const now = new Date();
+  const workDate = getWorkDate(now, schedule);
+
+  const snapshot = await db
     .collection("attendance")
     .where("userId", "==", userId)
-    .where("timeOut", "==", null)
+    .where("workDate", "==", workDate)
     .limit(1)
     .get();
 
-  if (punchType === "in" && !openSnapshot.empty) {
-    throw new Error("Punch Out before Punch In");
+  const attendanceDoc = snapshot.empty ? null : snapshot.docs[0];
+  const attendance = attendanceDoc ? attendanceDoc.data() : null;
+  if (punchType === "in") {
+    if (attendance?.timeIn && !attendance?.timeOut) {
+      throw new Error("You already punched in. Please punch out first.");
+    }
+
+    if (attendance?.timeIn && attendance?.timeOut) {
+      throw new Error("You already completed your shift.");
+    }
   }
 
-  if (punchType === "out" && openSnapshot.empty) {
-    throw new Error("Punch In before Punch Out");
+  if (punchType === "out") {
+    if (!attendance?.timeIn) {
+      throw new Error("Punch In before Punch Out.");
+    }
+
+    if (attendance?.timeOut) {
+      throw new Error("You already punched out.");
+    }
   }
+
+  return { workDate, attendanceDoc };
+};
+
+const punchIn = async ({ userId, workDate }) => {
+  const docRef = await db.collection("attendance").add({
+    userId,
+    workDate,
+    timeIn: admin.firestore.FieldValue.serverTimestamp(),
+    timeOut: null,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  const doc = await docRef.get();
+
+  return {
+    id: doc.id,
+    ...doc.data(),
+  };
+};
+
+const punchOut = async ({ schedule, attendanceDoc }) => {
+  if (!attendanceDoc) {
+    throw new Error("Attendance record not found.");
+  }
+
+  await attendanceDoc.ref.update({
+    timeOut: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  const updatedDoc = await attendanceDoc.ref.get();
+  const attendance = updatedDoc.data();
+
+  const summary = computeDailySummary({
+    timeIn: attendance.timeIn.toDate(),
+    timeOut: attendance.timeOut.toDate(),
+    schedule,
+  });
+
+  await db.collection("dailySummary").add({
+    attendanceId: attendanceDoc.id,
+    ...summary,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return {
+    id: attendanceDoc.id,
+    ...attendance,
+    summary,
+  };
 };
 
 exports.punch = async (req, res) => {
   try {
-    const { userId, punchType, schedule = {} } = req.body;
-    let data = {};
-    if (!userId || !punchType) {
-      return res
-        .status(400)
-        .json({ error: "UserId and punchType are required!" });
+    const { punchType } = req.body;
+    const { schedule, uid: userId } = req.user;
+    if (!punchType) {
+      return res.status(400).json({
+        error: "Punch type is required!",
+      });
     }
 
-    if (punchType === "in") {
-      data = await punchIn(userId);
-    } else {
-      data = await punchOut(userId, schedule);
+    if (!schedule?.start || !schedule?.end) {
+      return res.status(400).json({
+        error: "Schedule start and end are required!",
+      });
     }
+
+    const { workDate, attendanceDoc } = await punchValidation({
+      userId,
+      punchType,
+      schedule,
+    });
+
+    const data =
+      punchType === "in"
+        ? await punchIn({ userId, workDate })
+        : await punchOut({
+            schedule,
+            attendanceDoc,
+          });
 
     res.json({
       message: "Attendance Punch Successfully",
-      data: { ...data, punchType },
+      data: {
+        ...data,
+        punchType,
+      },
     });
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -71,7 +71,7 @@ const Punch = ({
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
             <Button
               size="lg"
-              disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
+              // disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
               onClick={() => handlePunch("in")}
             >
               <ArrowDownToLine />
