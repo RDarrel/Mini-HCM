@@ -36,33 +36,34 @@ const minDateTime = (a, b) => {
 };
 
 // Night differential is counted only from 10 PM to 6 AM.
+// Night differential is counted only from 10 PM to 6 AM.
 const computeNightDifferential = (timeIn, timeOut) => {
-  const ndWindowStart = timeIn.set({
-    hour: 22,
-    minute: 0,
-    second: 0,
-    millisecond: 0,
-  }); // 10 PM
+  let totalMinutes = 0;
+  let windowDate = timeIn.startOf("day").minus({ days: 1 });
 
-  const ndWindowEnd = ndWindowStart.plus({ days: 1 }).set({
-    hour: 6,
-    minute: 0,
-    second: 0,
-    millisecond: 0,
-  }); // 6 AM next day
+  while (windowDate <= timeOut) {
+    const ndWindowStart = windowDate.set({
+      hour: 22,
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+    });
 
-  const overlapStart = maxDateTime(timeIn, ndWindowStart);
+    const ndWindowEnd = ndWindowStart.plus({ hours: 8 });
 
-  const overlapEnd = minDateTime(timeOut, ndWindowEnd);
+    const overlapStart = maxDateTime(timeIn, ndWindowStart);
 
-  // No overlap
-  if (overlapEnd <= overlapStart) {
-    return 0;
+    const overlapEnd = minDateTime(timeOut, ndWindowEnd);
+
+    // No overlap
+    if (overlapEnd > overlapStart) {
+      totalMinutes += diffInMinutes(overlapStart, overlapEnd);
+    }
+
+    windowDate = windowDate.plus({ days: 1 });
   }
 
-  const ndMinutes = diffInMinutes(overlapStart, overlapEnd);
-
-  return ndMinutes;
+  return totalMinutes;
 };
 
 // Computes attendance metrics using actual time in/out and assigned schedule.

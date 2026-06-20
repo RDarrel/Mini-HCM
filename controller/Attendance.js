@@ -100,7 +100,7 @@ const punchIn = async ({ userId, workDate, timezone }) => {
   };
 };
 
-const punchOut = async ({ schedule, attendanceDoc }) => {
+const punchOut = async ({ schedule, attendanceDoc, timezone }) => {
   if (!attendanceDoc) {
     throw new Error("Attendance record not found.");
   }

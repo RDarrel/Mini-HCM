@@ -25,7 +25,6 @@ const diffInMinutes = (start, end) => {
 const computeNightDifferential = (timeIn, timeOut) => {
   let totalMinutes = 0;
   let windowDate = timeIn.startOf("day").minus({ days: 1 });
-
   while (windowDate <= timeOut) {
     const ndWindowStart = windowDate.set({
       hour: 22,
