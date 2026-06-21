@@ -5,8 +5,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useSelector } from "react-redux";
+import Skeleton from "./Skeleton";
 
 const KPIs = ({ title = "", description = "", kpis }) => {
+  const { isFetchingItem } = useSelector(({ attendance }) => attendance);
+
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader className="pb-2">
@@ -14,11 +18,15 @@ const KPIs = ({ title = "", description = "", kpis }) => {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {kpis.map((item) => (
-            <KPI key={item.label} {...item} />
-          ))}
-        </div>
+        {isFetchingItem ? (
+          <Skeleton />
+        ) : (
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {kpis.map((item) => (
+              <KPI key={item.label} {...item} />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

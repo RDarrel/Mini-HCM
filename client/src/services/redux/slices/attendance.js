@@ -112,7 +112,7 @@ export const reduxSlice = createSlice({
       state.route = data.payload;
     },
 
-    RESET: (state, data) => {
+    RESET: (state) => {
       state.isSuccess = false;
       state.auth = {};
       state.message = "";
@@ -157,7 +157,7 @@ export const reduxSlice = createSlice({
       })
 
       .addCase(TODAY_SUMMARY.pending, (state) => {
-        state.isFetchingList = true;
+        state.isFetchingItem = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -165,12 +165,12 @@ export const reduxSlice = createSlice({
         const { data } = action.payload;
         state.todaySummary = data;
         state.isSuccess = true;
-        state.isFetchingList = false;
+        state.isFetchingItem = false;
       })
       .addCase(TODAY_SUMMARY.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isFetchingList = false;
+        state.isFetchingItem = false;
       })
 
       .addCase(GET_TODAY_RECORD.pending, (state) => {
