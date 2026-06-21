@@ -48,50 +48,46 @@ const EmployeeRecords = ({ from, to }) => {
         <CardDescription>Employees with records today.</CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        {isFetchingList ? (
-          <TableSkeleton numberOfColumns={4} />
-        ) : (
-          <>
-            <div className="overflow-hidden rounded-md border">
-              <Table className="min-w-[720px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Punch In</TableHead>
-                    <TableHead>Punch Out</TableHead>
-                    <TableHead>Total Logged</TableHead>
+        <div className="overflow-hidden rounded-md border">
+          <Table className="min-w-[720px]">
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead>Employee</TableHead>
+                <TableHead>Punch In</TableHead>
+                <TableHead>Punch Out</TableHead>
+                <TableHead>Total Logged</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isFetchingList ? (
+                <TableSkeleton numberOfRows={2} numberOfColumns={4} />
+              ) : collections?.length > 0 ? (
+                collections.map((employee) => (
+                  <TableRow key={employee.id} className="hover:bg-muted/30">
+                    <TableCell>
+                      <div className="font-medium">
+                        {Formatter.fullName(employee?.user?.name)}
+                      </div>
+                    </TableCell>
+                    <TableCell>{Formatter.time(employee.timeIn)}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {Formatter.time(employee.timeOut)}
+                    </TableCell>
+                    <TableCell className="font-medium tabular-nums">
+                      {Formatter.duration(employee.totalLoggedMinutes)}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {collections?.length > 0 ? (
-                    collections.map((employee) => (
-                      <TableRow key={employee.id} className="hover:bg-muted/30">
-                        <TableCell>
-                          <div className="font-medium">
-                            {Formatter.fullName(employee?.user?.name)}
-                          </div>
-                        </TableCell>
-                        <TableCell>{Formatter.time(employee.timeIn)}</TableCell>
-                        <TableCell className="tabular-nums">
-                          {Formatter.time(employee.timeOut)}
-                        </TableCell>
-                        <TableCell className="font-medium tabular-nums">
-                          {Formatter.duration(employee.totalLoggedMinutes)}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <EmptyRecords />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </>
-        )}
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="p-0">
+                    <EmptyRecords />
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
         <Pagination
           title="Employee Record"
           setPage={setPage}
@@ -106,13 +102,13 @@ const EmployeeRecords = ({ from, to }) => {
 export default EmployeeRecords;
 
 const EmptyRecords = () => (
-  <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-    <div className="rounded-md border bg-muted/20 p-2">
+  <div className="flex items-center justify-center gap-3 px-4 py-6">
+    <div className="shrink-0 rounded-md border bg-muted/20 p-2">
       <CalendarX className="size-5 text-muted-foreground" />
     </div>
     <div>
-      <p className="font-medium">No attendance records yet</p>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="text-sm font-medium">No attendance records yet</p>
+      <p className="text-xs text-muted-foreground">
         Records will appear here once employees punch in.
       </p>
     </div>

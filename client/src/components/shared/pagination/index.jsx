@@ -19,7 +19,7 @@ const Pagination = ({
     pagination;
   const startRecord = totalRecords === 0 ? 0 : (page - 1) * limit + 1;
   const endRecord = Math.min(page * limit, totalRecords);
-
+  if (totalRecords === 0) return null;
   return (
     <div
       className={cn(
