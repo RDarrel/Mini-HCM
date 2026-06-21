@@ -69,9 +69,6 @@ const HistoryTableRow = memo(
             <div className="font-medium">
               {Formatter.date(record.workDate, false, timezone)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {record?.workDate || ""}
-            </p>
           </TableCell>
           <TableCell className="tabular-nums">
             {Formatter.time(record.timeIn, timezone)}

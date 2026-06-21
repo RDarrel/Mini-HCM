@@ -25,7 +25,7 @@ const TableLoading = ({
       >
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               {columns.map((_, index) => (
                 <TableHead
                   className={`${index === 0 ? "w-[100px]" : ""}`}
@@ -38,7 +38,7 @@ const TableLoading = ({
           </TableHeader>
           <TableBody>
             {new Array(5).fill("").map((_, index) => (
-              <TableRow key={index}>
+              <TableRow key={index} className={"hover:bg-transparent"}>
                 {columns.map((_, index) => (
                   <TableCell
                     className={`${index === 0 ? "w-[100px]" : ""}`}

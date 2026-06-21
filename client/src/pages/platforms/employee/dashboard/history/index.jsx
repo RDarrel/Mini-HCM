@@ -56,7 +56,7 @@ const AttHistory = () => {
             </div>
             {/* Full view loading */}
             <div className="hidden overflow-hidden  md:block">
-              <TableSkeleton />
+              <TableSkeleton numberOfColumns={6} />
             </div>
           </>
         ) : collections.length ? (
