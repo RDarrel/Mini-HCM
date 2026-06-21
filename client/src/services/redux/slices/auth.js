@@ -172,10 +172,11 @@ export const reduxSlice = createSlice({
       state.route = data.payload;
     },
 
-    RESET: (state, data) => {
+    RESET: (state) => {
       state.isSuccess = false;
       state.auth = {};
       state.message = "";
+      state.isCheckingAuth = false;
     },
   },
   extraReducers: (builder) => {
@@ -197,7 +198,6 @@ export const reduxSlice = createSlice({
       })
 
       .addCase(RESTORE_SESSION.pending, (state) => {
-        state.isCheckingAuth = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -216,7 +216,7 @@ export const reduxSlice = createSlice({
         state.isSuccess = false;
         state.message = "";
       })
-      .addCase(REGISTER.fulfilled, (state, _) => {
+      .addCase(REGISTER.fulfilled, (state) => {
         state.isLoading = false;
       })
       .addCase(REGISTER.rejected, (state, action) => {
@@ -229,7 +229,7 @@ export const reduxSlice = createSlice({
         state.isSuccess = false;
         state.message = "";
       })
-      .addCase(LOGOUT.fulfilled, (state, _) => {
+      .addCase(LOGOUT.fulfilled, (state) => {
         state.isLoading = false;
         state.auth = {};
         state.isSuccess = true;
