@@ -31,9 +31,9 @@ export const PUNCH = createAsyncThunk(`${url}/punch`, (payload, thunkAPI) => {
   }
 });
 
-export const BROWSE = createAsyncThunk(`${url}/browse`, (_, thunkAPI) => {
+export const BROWSE = createAsyncThunk(`${url}/browse`, (params, thunkAPI) => {
   try {
-    return axioKit.universal(url);
+    return axioKit.universal(url, params);
   } catch (error) {
     const message =
       (error.response && error.response.data && error.response.data.message) ||

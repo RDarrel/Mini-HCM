@@ -6,17 +6,19 @@ import { getAuth } from "firebase/auth";
  *
  * @param {string} entity - Base route of the API.
  * @param {string} token - Authorization Token.
- * @param {string|object} key - Headers that will be passed to the api.
+ * @param {string|object} params - Headers that will be passed to the api.
  * @returns {{ success: boolean, payload: Array<any>|object }} - The result object containing success and payload.
  */
 
-const universal = async (name, key = "") => {
+const universal = async (name, params = {}) => {
   let queryString = "";
   const token = await getAuth().currentUser.getIdToken();
 
-  if (typeof key === "object") {
-    Object.keys(key).forEach((i) => {
-      const value = Array.isArray(key[i]) ? JSON.stringify(key[i]) : key[i];
+  if (typeof params === "object") {
+    Object.keys(params).forEach((i) => {
+      const value = Array.isArray(params[i])
+        ? JSON.stringify(params[i])
+        : params[i];
       queryString += `${encodeURIComponent(i)}=${encodeURIComponent(value)}&`;
     });
     queryString = `?${queryString.slice(0, -1)}`;

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,8 @@ import { CheckCircle2, History } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Formatter } from "@/services/utilities";
 import Pagination from "@/components/shared/pagination";
+import { useDispatch } from "react-redux";
+import { BROWSE } from "@/services/redux/slices/attendance";
 
 const getRecordMinutes = (record) => {
   if (Number.isFinite(record?.totalLoggedMinutes)) {
@@ -41,6 +43,13 @@ const AttHistory = () => {
     pagination,
   } = useSelector(({ attendance }) => attendance);
   const { timezone = "Asia/Manila" } = auth;
+  const dispatch = useDispatch();
+  const setPage = (page) => {
+    dispatch(BROWSE({ page, limit: pagination.limit }));
+  };
+  const setLimit = (limit) => {
+    dispatch(BROWSE({ page: pagination.page, limit }));
+  };
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
@@ -112,6 +121,12 @@ const AttHistory = () => {
                 </TableBody>
               </Table>
             </div>
+            <Pagination
+              title="Attendance"
+              pagination={pagination}
+              setPage={setPage}
+              setLimit={setLimit}
+            />
           </>
         ) : (
           <div className="rounded-md border border-dashed bg-muted/20 p-6 text-center text-sm text-muted-foreground">
@@ -119,7 +134,6 @@ const AttHistory = () => {
           </div>
         )}
       </CardContent>
-      <Pagination pagination={pagination} />
     </Card>
   );
 };

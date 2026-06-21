@@ -15,12 +15,12 @@ const AVAILABLE_MAXPAGES = [5, 10, 15, 20, 25];
 
 const RowsPerPage = ({ maxPage, setMaxPage }) => {
   return (
-    <div className="flex  items-center ml-2">
-      <p className="font-semibold text-h5 mr-3">Rows Per Page</p>
+    <div className="flex items-center gap-2 sm:gap-3">
+      <p className="text-sm font-semibold sm:text-h5">Rows Per Page</p>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            className="flex items-center justify-center h-8"
+            className="flex h-8 items-center justify-center px-3"
             variant={"outline"}
           >
             <p>{maxPage}</p> <ChevronDown color="gray" />

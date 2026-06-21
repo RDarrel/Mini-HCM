@@ -18,9 +18,11 @@ const DEFAULT_TIMEZONE = "Asia/Manila";
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { auth = {} } = useSelector(({ auth }) => auth);
-  const { collections = [], isSubmitting } = useSelector(
-    ({ attendance }) => attendance,
-  );
+  const {
+    collections = [],
+    isSubmitting,
+    pagination,
+  } = useSelector(({ attendance }) => attendance);
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
@@ -28,8 +30,8 @@ const Dashboard = () => {
   const scheduledMinutes = utils.compute.scheduleMinutes(schedule);
   const todayIso = DateTime.fromJSDate(now).setZone(timezone).toISODate();
   useEffect(() => {
-    dispatch(BROWSE());
-  }, [dispatch]);
+    dispatch(BROWSE({ page: pagination.page, limit: pagination.limit }));
+  }, [dispatch, pagination.page, pagination.limit]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 30000);
