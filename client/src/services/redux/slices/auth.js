@@ -21,6 +21,7 @@ const initialState = {
   maxPage,
   isSuccess: false,
   isLoading: false,
+  isCheckingAuth: false,
   message: "",
 };
 
@@ -196,18 +197,18 @@ export const reduxSlice = createSlice({
       })
 
       .addCase(RESTORE_SESSION.pending, (state) => {
-        state.isLoading = true;
+        state.isCheckingAuth = true;
         state.isSuccess = false;
         state.message = "";
       })
       .addCase(RESTORE_SESSION.fulfilled, (state, action) => {
         state.auth = action.payload;
-        state.isLoading = false;
+        state.isCheckingAuth = false;
       })
       .addCase(RESTORE_SESSION.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isLoading = false;
+        state.isCheckingAuth = false;
       })
 
       .addCase(REGISTER.pending, (state) => {

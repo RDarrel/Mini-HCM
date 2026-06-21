@@ -13,7 +13,7 @@ import "./App.css";
 
 import AppLoader from "./components/shared/appLoader";
 export default function App() {
-  const { auth: authUser, isLoading } = useSelector(({ auth }) => auth);
+  const { auth: authUser, isCheckingAuth } = useSelector(({ auth }) => auth);
   const dispatch = useDispatch();
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -27,7 +27,7 @@ export default function App() {
     return () => unsubscribe();
   }, [dispatch]);
 
-  if (isLoading) return <AppLoader />;
+  if (isCheckingAuth) return <AppLoader />;
   return (
     <Routes>
       <Route path="/" element={<Authentication />} />
