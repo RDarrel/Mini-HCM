@@ -16,7 +16,7 @@ const TodaySummary = ({
   workedMinutes,
   timezone = "Asia/Manila",
 }) => {
-  const { isFetchingTodayRecord: isLoading } = useSelector(
+  const { isFetchingItem: isLoading } = useSelector(
     ({ attendance }) => attendance,
   );
   return (

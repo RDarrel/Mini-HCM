@@ -36,7 +36,7 @@ const Punch = ({
   const {
     todayRecord,
     isSubmitting,
-    isFetchingTodayRecord: isLoading,
+    isFetchingItem: isLoading,
   } = useSelector(({ attendance }) => attendance);
   const [actionType, setActionType] = useState("");
   const dispatch = useDispatch();
@@ -78,53 +78,53 @@ const Punch = ({
           <PunchSkeleton />
         ) : (
           <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <InfoPanel
-              icon={CalendarClock}
-              label="Assigned Schedule"
-              value={shiftLabel}
-            />
-            <InfoPanel
-              icon={Timer}
-              label="Current Session"
-              value={
-                todayRecord?.status === "in_progress"
-                  ? Formatter.duration(workedMinutes)
-                  : "--"
-              }
-            />
-            <InfoPanel
-              icon={UserCheck}
-              label="Attendance Status"
-              value={statusLabel}
-            />
-          </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <InfoPanel
+                icon={CalendarClock}
+                label="Assigned Schedule"
+                value={shiftLabel}
+              />
+              <InfoPanel
+                icon={Timer}
+                label="Current Session"
+                value={
+                  todayRecord?.status === "in_progress"
+                    ? Formatter.duration(workedMinutes)
+                    : "--"
+                }
+              />
+              <InfoPanel
+                icon={UserCheck}
+                label="Attendance Status"
+                value={statusLabel}
+              />
+            </div>
 
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-            <Button
-              size="lg"
-              disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
-              onClick={() => handlePunch("in")}
-            >
-              <ArrowDownToLine />
-              Punch In
-              {actionType === "in" && isSubmitting && (
-                <Spinner isLoading={true} />
-              )}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              disabled={isSubmitting || !utils.canPunchOut(todayRecord)}
-              onClick={() => handlePunch("out")}
-            >
-              <ArrowUpFromLine />
-              Punch Out
-              {actionType === "out" && isSubmitting && (
-                <Spinner isLoading={true} />
-              )}
-            </Button>
-          </div>
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+              <Button
+                size="lg"
+                disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
+                onClick={() => handlePunch("in")}
+              >
+                <ArrowDownToLine />
+                Punch In
+                {actionType === "in" && isSubmitting && (
+                  <Spinner isLoading={true} />
+                )}
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                disabled={isSubmitting || !utils.canPunchOut(todayRecord)}
+                onClick={() => handlePunch("out")}
+              >
+                <ArrowUpFromLine />
+                Punch Out
+                {actionType === "out" && isSubmitting && (
+                  <Spinner isLoading={true} />
+                )}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>

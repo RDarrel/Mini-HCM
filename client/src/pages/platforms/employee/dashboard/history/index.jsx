@@ -20,7 +20,7 @@ const AttHistory = () => {
   const { auth } = useSelector(({ auth }) => auth);
   const {
     collections = [],
-    isBrowsing: isLoading,
+    isFetchingItem: isLoading,
     pagination,
   } = useSelector(({ attendance }) => attendance);
   const { timezone = "Asia/Manila" } = auth;

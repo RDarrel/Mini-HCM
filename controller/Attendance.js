@@ -21,7 +21,7 @@ const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
   return workDate.toFormat("yyyy-MM-dd");
 };
 
-exports.browse = async (req, res) => {
+exports.myHistory = async (req, res) => {
   try {
     const userId = req.user.uid;
 
@@ -33,7 +33,7 @@ exports.browse = async (req, res) => {
     const totalRecords = totalSnapshot.data().count;
 
     const snapshot = await query
-      .orderBy("createdAt", "desc")
+      .orderBy("workDate", "desc")
       .offset(offset)
       .limit(limit)
       .get();
@@ -72,7 +72,7 @@ const getDailySummary = async (attendanceId) => {
 };
 
 // Returns today's attendance record along with its computed summary if available.
-exports.get_today_record = async (req, res) => {
+exports.todayRecord = async (req, res) => {
   try {
     const { uid: userId, schedule, timezone } = req.user;
     const now = new Date();
@@ -280,6 +280,151 @@ exports.punch = async (req, res) => {
         ...data,
         punchType,
       },
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+// Get today's employees summary
+exports.todaySummary = async (req, res) => {
+  try {
+    const { timezone, role } = req.user;
+
+    if (role !== "administrator") {
+      return res.status(403).json({ error: "You are not authorized" });
+    }
+
+    const workDate = DateTime.now()
+      .setZone(timezone || "Asia/Manila")
+      .toISODate();
+
+    const [usersSnapshot, summarySnapshot] = await Promise.all([
+      db.collection("users").where("role", "==", "employee").get(),
+      db.collection("dailySummary").where("workDate", "==", workDate).get(),
+    ]);
+
+    const totalEmployees = usersSnapshot.size;
+    const presentToday = summarySnapshot.size;
+    const absentToday = Math.max(totalEmployees - presentToday, 0);
+
+    let lateToday = 0;
+    let employeesWithOT = 0;
+    let employeesWithND = 0;
+
+    let currentlyWorking = 0;
+    let completedShifts = 0;
+
+    summarySnapshot.forEach((doc) => {
+      const data = doc.data();
+
+      if ((data.lateMinutes || 0) > 0) lateToday++;
+      if ((data.overtimeMinutes || 0) > 0) employeesWithOT++;
+      if ((data.nightDiffMinutes || 0) > 0) employeesWithND++;
+      if (data.timeIn && !data.timeOut) currentlyWorking++;
+      if (data.timeIn && data.timeOut) completedShifts++;
+    });
+
+    res.json({
+      message: "Summary fetched successfully",
+      data: {
+        workDate,
+        totalEmployees,
+        presentToday,
+        absentToday,
+        lateToday,
+        currentlyWorking,
+        completedShifts,
+        employeesWithOT,
+        employeesWithND,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.records = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    const { timezone, role } = req.user;
+
+    if (role !== "administrator") {
+      return res.status(403).json({ error: "You are not authorized" });
+    }
+
+    if (!from || !to) {
+      return res.status(400).json({ error: "From and to date are required!" });
+    }
+
+    const { page, limit, offset } = getPagination(req.query);
+
+    const workDate = DateTime.now()
+      .setZone(timezone || "Asia/Manila")
+      .toISODate();
+
+    const dailySummaryQuery = db
+      .collection("dailySummary")
+      .where("workDate", ">=", from)
+      .where("workDate", "<=", to);
+
+    const [dailySummarySnapshot, totalSnapshot] = await Promise.all([
+      dailySummaryQuery
+        .orderBy("workDate", "desc")
+        .limit(limit)
+        .offset(offset)
+        .get(),
+      dailySummaryQuery.count().get(),
+    ]);
+
+    const totalRecords = totalSnapshot.data().count;
+
+    const userIds = [
+      ...new Set(dailySummarySnapshot.docs.map((doc) => doc.data().userId)),
+    ];
+
+    let userMap = new Map();
+
+    if (userIds.length > 0) {
+      const usersSnapshot = await db
+        .collection("users")
+        .where("uid", "in", userIds)
+        .get();
+
+      userMap = new Map(
+        usersSnapshot.docs.map((doc) => {
+          const user = doc.data();
+
+          return [
+            user.uid,
+            {
+              uid: user.uid,
+              name: user.name,
+              email: user.email,
+            },
+          ];
+        }),
+      );
+    }
+
+    const records = dailySummarySnapshot.docs.map((doc) => {
+      const attendance = doc.data();
+
+      return {
+        id: doc.id,
+        ...attendance,
+        user: userMap.get(attendance.userId) || null,
+      };
+    });
+
+    res.json({
+      message: "Records fetched successfully",
+      data: records,
+      pagination: getPaginationMeta({
+        page,
+        limit,
+        totalRecords,
+      }),
     });
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -4,7 +4,8 @@ const url = "attendance";
 
 const initialState = {
   collections: [],
-  todayRecord: {}, //attendance record for today
+  todayRecord: {}, // Today's attendance record (employee)
+  todaySummary: {}, // Today's attendance summary (admin)
   pagination: {
     page: 1,
     limit: 10,
@@ -14,10 +15,9 @@ const initialState = {
     hasPrevPage: false,
   },
   isSuccess: false,
-  isLoading: false,
   isSubmitting: false,
-  isBrowsing: false, // For History Page
-  isFetchingTodayRecord: false,
+  isFetchingItem: false,
+  isFetchingList: false, // For History Page
   message: "",
 };
 
@@ -46,6 +46,42 @@ export const BROWSE = createAsyncThunk(`${url}/browse`, (params, thunkAPI) => {
     return thunkAPI.rejectWithValue(message);
   }
 });
+
+export const RECORDS = createAsyncThunk(
+  `${url}/records`,
+  (params, thunkAPI) => {
+    try {
+      return axioKit.universal(`${url}/records`, params);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const TODAY_SUMMARY = createAsyncThunk(
+  `${url}/summary`,
+  (params, thunkAPI) => {
+    try {
+      return axioKit.universal(`${url}/today/summary`, params);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
 
 export const GET_TODAY_RECORD = createAsyncThunk(
   `${url}/get-today-record`,
@@ -85,7 +121,7 @@ export const reduxSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(BROWSE.pending, (state) => {
-        state.isBrowsing = true;
+        state.isFetchingList = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -94,16 +130,51 @@ export const reduxSlice = createSlice({
         state.collections = data;
         state.pagination = pagination;
         state.isSuccess = true;
-        state.isBrowsing = false;
+        state.isFetchingList = false;
       })
       .addCase(BROWSE.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isBrowsing = false;
+        state.isFetchingList = false;
+      })
+
+      .addCase(RECORDS.pending, (state) => {
+        state.isFetchingList = true;
+        state.isSuccess = false;
+        state.message = "";
+      })
+      .addCase(RECORDS.fulfilled, (state, action) => {
+        const { data, pagination } = action.payload;
+        state.collections = data;
+        state.pagination = pagination;
+        state.isSuccess = true;
+        state.isFetchingList = false;
+      })
+      .addCase(RECORDS.rejected, (state, action) => {
+        const { error } = action;
+        state.message = error.message;
+        state.isFetchingList = false;
+      })
+
+      .addCase(TODAY_SUMMARY.pending, (state) => {
+        state.isFetchingList = true;
+        state.isSuccess = false;
+        state.message = "";
+      })
+      .addCase(TODAY_SUMMARY.fulfilled, (state, action) => {
+        const { data } = action.payload;
+        state.todaySummary = data;
+        state.isSuccess = true;
+        state.isFetchingList = false;
+      })
+      .addCase(TODAY_SUMMARY.rejected, (state, action) => {
+        const { error } = action;
+        state.message = error.message;
+        state.isFetchingList = false;
       })
 
       .addCase(GET_TODAY_RECORD.pending, (state) => {
-        state.isFetchingTodayRecord = true;
+        state.isFetchingItem = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -111,12 +182,12 @@ export const reduxSlice = createSlice({
         const { data } = action.payload;
         state.todayRecord = data;
         state.isSuccess = true;
-        state.isFetchingTodayRecord = false;
+        state.isFetchingItem = false;
       })
       .addCase(GET_TODAY_RECORD.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isFetchingTodayRecord = false;
+        state.isFetchingItem = false;
       })
       .addCase(PUNCH.pending, (state) => {
         state.isSubmitting = true;

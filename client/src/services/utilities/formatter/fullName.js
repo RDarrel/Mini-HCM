@@ -1,3 +1,4 @@
+import capitalize from "./capitalize";
 const fullName = (fullname) => {
   if (typeof fullname !== "object") return "Datatype mismatch";
 
@@ -12,9 +13,11 @@ const fullName = (fullname) => {
         .join("")}.`;
     }
 
-    return `${lname}, ${fname} ${middleName} ${
+    const fullName = `${lname}, ${fname} ${middleName} ${
       suffix ? `(${suffix})` : ""
     }`.replace(/^\s+|\s+$/gm, "");
+
+    return capitalize(fullName);
   }
 
   return "Incomplete";
