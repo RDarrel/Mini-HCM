@@ -81,7 +81,11 @@ const Punch = ({
             <InfoPanel
               icon={Timer}
               label="Current Session"
-              value={Formatter.duration(workedMinutes)}
+              value={
+                todayRecord?.status === "in_progress"
+                  ? Formatter.duration(workedMinutes)
+                  : "--"
+              }
             />
             <InfoPanel
               icon={UserCheck}
