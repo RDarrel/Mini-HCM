@@ -4,6 +4,7 @@ const url = "attendance";
 
 const initialState = {
   collections: [],
+  todayRecord: {}, //attendance record for today
   pagination: {
     page: 1,
     limit: 10,
@@ -43,6 +44,24 @@ export const BROWSE = createAsyncThunk(`${url}/browse`, (params, thunkAPI) => {
     return thunkAPI.rejectWithValue(message);
   }
 });
+
+export const GET_TODAY_RECORD = createAsyncThunk(
+  `${url}/get-today-record`,
+  (params = {}, thunkAPI) => {
+    try {
+      return axioKit.universal(`${url}/get-today-record`, params);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
 export const reduxSlice = createSlice({
   name: url,
   initialState,
@@ -76,6 +95,23 @@ export const reduxSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(BROWSE.rejected, (state, action) => {
+        const { error } = action;
+        state.message = error.message;
+        state.isLoading = false;
+      })
+
+      .addCase(GET_TODAY_RECORD.pending, (state) => {
+        state.isLoading = true;
+        state.isSuccess = false;
+        state.message = "";
+      })
+      .addCase(GET_TODAY_RECORD.fulfilled, (state, action) => {
+        const { data } = action.payload;
+        state.todayRecord = data;
+        state.isSuccess = true;
+        state.isLoading = false;
+      })
+      .addCase(GET_TODAY_RECORD.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
         state.isLoading = false;

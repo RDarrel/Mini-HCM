@@ -2,6 +2,7 @@ const { db, admin } = require("../config/firebase");
 const { DateTime } = require("luxon");
 const { computeDailySummary } = require("../utilities/attendance");
 const { getPagination, getPaginationMeta } = require("../utilities/pagination");
+const now = new Date();
 
 // Determines the work date used for attendance records.
 const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
@@ -58,12 +59,33 @@ exports.browse = async (req, res) => {
   }
 };
 
+exports.get_today_record = async (req, res) => {
+  try {
+    const { uid: userId, schedule, timezone } = req.user;
+    const workDate = getWorkDate(now, schedule, timezone);
+    const snapshot = await db
+      .collection("attendance")
+      .where("userId", "==", userId)
+      .where("workDate", "==", workDate)
+      .limit(1)
+      .get();
+    const doc = snapshot?.docs[0] || null;
+    res.json({
+      message: "Attendance history fetched successfully",
+      data: doc ? { id: doc.id, ...doc.data() } : null,
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+    });
+  }
+};
+
 // Validates punch in/out requests and enforces attendance rules.
 const punchValidation = async ({ userId, punchType, schedule, timezone }) => {
   if (!["in", "out"].includes(punchType)) {
     throw new Error("Invalid punch type");
   }
-  const now = new Date();
   const workDate = getWorkDate(now, schedule, timezone);
 
   // Check if the employee has an active attendance record.

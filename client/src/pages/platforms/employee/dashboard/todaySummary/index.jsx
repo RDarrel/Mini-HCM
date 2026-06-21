@@ -30,7 +30,7 @@ const TodaySummary = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
             <span>Progress</span>
             <span>{progress}%</span>
@@ -41,7 +41,7 @@ const TodaySummary = ({
               style={{ width: `${progress}%` }}
             />
           </div>
-        </div>
+        </div> */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           {summaryItems.map((item) => (
             <SummaryBox

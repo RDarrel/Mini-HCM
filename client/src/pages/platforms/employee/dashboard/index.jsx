@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { DateTime } from "luxon";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { BROWSE, PUNCH } from "@/services/redux/slices/attendance";
+import {
+  BROWSE,
+  GET_TODAY_RECORD,
+  PUNCH,
+} from "@/services/redux/slices/attendance";
 import { Formatter } from "@/services/utilities";
 import { Activity, CalendarClock, Clock3, History, Timer } from "lucide-react";
 import utils from "./utils";
@@ -19,31 +22,29 @@ const Dashboard = () => {
   const dispatch = useDispatch();
   const { auth = {} } = useSelector(({ auth }) => auth);
   const {
-    collections = [],
     isSubmitting,
     pagination,
+    todayRecord = {},
   } = useSelector(({ attendance }) => attendance);
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
   const timezone = auth?.timezone || DEFAULT_TIMEZONE;
   const scheduledMinutes = utils.compute.scheduleMinutes(schedule);
-  const todayIso = DateTime.fromJSDate(now).setZone(timezone).toISODate();
+
   useEffect(() => {
     dispatch(BROWSE({ page: pagination.page, limit: pagination.limit }));
   }, [dispatch, pagination.page, pagination.limit]);
+
+  useEffect(() => {
+    dispatch(GET_TODAY_RECORD());
+  }, [dispatch]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(new Date()), 30000);
 
     return () => window.clearInterval(interval);
   }, []);
-
-  const todayRecord = useMemo(
-    () =>
-      collections?.find(({ workDate = "" }) => workDate === todayIso) || null,
-    [collections, todayIso],
-  );
 
   const {
     regularMinutes,
