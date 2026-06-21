@@ -135,17 +135,47 @@ const Dashboard = () => {
           </Badge>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {attendanceKpis.map((item) => (
-            <AttendanceKpi key={item.label} {...item} size="lg" />
-          ))}
-        </section>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Today&apos;s Attendance</CardTitle>
+                <CardDescription>
+                  Workforce count and attendance status.
+                </CardDescription>
+              </div>
+              <Users className="mt-1 size-5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {attendanceKpis.map((item) => (
+                <AttendanceKpi key={item.label} {...item} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {shiftKpis.map((item) => (
-            <AttendanceKpi key={item.label} {...item} />
-          ))}
-        </section>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Shift Monitoring</CardTitle>
+                <CardDescription>
+                  Current shift activity and premium attendance indicators.
+                </CardDescription>
+              </div>
+              <Clock3 className="mt-1 size-5 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {shiftKpis.map((item) => (
+                <AttendanceKpi key={item.label} {...item} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="border-border/70 shadow-sm">
           <CardHeader className="pb-3">
@@ -206,37 +236,18 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-const AttendanceKpi = ({
-  label,
-  value,
-  helper,
-  icon,
-  size = "default",
-}) => {
+const AttendanceKpi = ({ label, value, helper, icon }) => {
   const KpiIcon = icon;
 
   return (
-    <Card className="border-border/70 shadow-sm">
-      <CardContent className={cn("p-4", size === "lg" && "sm:p-5")}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p
-              className={cn(
-                "mt-2 font-semibold tabular-nums",
-                size === "lg" ? "text-3xl" : "text-2xl",
-              )}
-            >
-              {value}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
-          </div>
-          <div className="rounded-md border bg-muted/30 p-2">
-            <KpiIcon className="size-5 text-muted-foreground" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-md border bg-background p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <KpiIcon className="size-4 text-muted-foreground" />
+      </div>
+      <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
+      <p className="mt-1 truncate text-xs text-muted-foreground">{helper}</p>
+    </div>
   );
 };
 
