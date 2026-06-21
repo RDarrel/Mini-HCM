@@ -21,7 +21,7 @@ const initialState = {
   maxPage,
   isSuccess: false,
   isLoading: false,
-  isCheckingAuth: false,
+  isCheckingAuth: true,
   message: "",
 };
 
