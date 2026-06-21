@@ -25,6 +25,7 @@ const AttHistory = () => {
   } = useSelector(({ attendance }) => attendance);
   const { timezone = "Asia/Manila" } = auth;
   const dispatch = useDispatch();
+
   const setPage = (page) => {
     dispatch(BROWSE({ page, limit: pagination.limit }));
   };

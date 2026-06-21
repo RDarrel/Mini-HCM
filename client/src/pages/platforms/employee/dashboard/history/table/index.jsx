@@ -14,6 +14,7 @@ import { AttendanceStatus } from "../components";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import utils from "../../utils";
+
 const HistoryTable = () => {
   const { auth } = useSelector(({ auth }) => auth);
   const { timezone = "Asia/Manila" } = auth;

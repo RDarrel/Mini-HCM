@@ -57,11 +57,11 @@ const Dashboard = () => {
   const summaryItems = useMemo(
     () =>
       utils.buildAttSummaryItems({ ...summary, status: todayRecord?.status }),
-    [summary, todayRecord.status],
+    [summary, todayRecord?.status],
   );
 
   return (
-    <main className="min-h-[calc(100vh-3.25rem)] bg-muted/20 p-4 sm:p-6">
+    <main className="min-h-[calc(100vh-3.25rem)]  p-4 sm:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
         <Punch
           workedMinutes={workedMinutes}
