@@ -1,5 +1,7 @@
 import { DateTime } from "luxon";
+import { Clock3, Timer, Activity, CalendarClock, Moon } from "lucide-react";
 import dailySummary from "./dailySummary";
+import { Formatter } from "@/services/utilities";
 const DEFAULT_TIMEZONE = "Asia/Manila";
 
 const getMinutesFromTime = (time = "00:00") => {
@@ -45,6 +47,42 @@ const utils = {
     if (!attendance) return false;
     if (attendance?.timeIn && !attendance.timeOut) return true;
     return false;
+  },
+  buildAttSummaryItems: (attendance = {}) => {
+    const {
+      regularMinutes = 0,
+      overtimeMinutes = 0,
+      nightDiffMinutes = 0,
+      lateMinutes = 0,
+      undertimeMinutes = 0,
+    } = attendance;
+    return [
+      {
+        label: "Regular Hours",
+        value: Formatter.duration(regularMinutes),
+        icon: Clock3,
+      },
+      {
+        label: "Overtime",
+        value: Formatter.duration(overtimeMinutes),
+        icon: Timer,
+      },
+      {
+        label: "Late",
+        value: Formatter.duration(lateMinutes),
+        icon: Activity,
+      },
+      {
+        label: "Undertime",
+        value: Formatter.duration(undertimeMinutes),
+        icon: CalendarClock,
+      },
+      {
+        label: "Night Differential",
+        value: Formatter.duration(nightDiffMinutes),
+        icon: Moon,
+      },
+    ];
   },
 };
 

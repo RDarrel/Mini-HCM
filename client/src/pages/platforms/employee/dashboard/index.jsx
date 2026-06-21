@@ -1,8 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BROWSE, GET_TODAY_RECORD } from "@/services/redux/slices/attendance";
-import { Formatter } from "@/services/utilities";
-import { Activity, CalendarClock, Clock3, History, Timer } from "lucide-react";
 import utils from "./utils";
 import Punch from "./punch";
 import TodaySummary from "./todaySummary";
@@ -42,14 +40,7 @@ const Dashboard = () => {
     return () => window.clearInterval(interval);
   }, []);
 
-  const {
-    regularMinutes,
-    overtimeMinutes,
-    nightDiffMinutes,
-    lateMinutes,
-    undertimeMinutes,
-    totalLoggedMinutes,
-  } = useMemo(
+  const { totalLoggedMinutes, ...summary } = useMemo(
     () => utils.compute.dailySummary(todayRecord, schedule, timezone),
     [todayRecord, schedule, timezone, now],
   );
@@ -72,33 +63,7 @@ const Dashboard = () => {
     [todayRecord],
   );
 
-  const summaryItems = [
-    {
-      label: "Regular Hours",
-      value: Formatter.duration(regularMinutes),
-      icon: Clock3,
-    },
-    {
-      label: "Overtime",
-      value: Formatter.duration(overtimeMinutes),
-      icon: Timer,
-    },
-    {
-      label: "Late",
-      value: Formatter.duration(lateMinutes),
-      icon: Activity,
-    },
-    {
-      label: "Undertime",
-      value: Formatter.duration(undertimeMinutes),
-      icon: CalendarClock,
-    },
-    {
-      label: "Night Differential",
-      value: Formatter.duration(nightDiffMinutes),
-      icon: History,
-    },
-  ];
+  const summaryItems = utils.buildAttSummaryItems(summary);
 
   return (
     <main className="min-h-[calc(100vh-3.25rem)] bg-muted/20 p-4 sm:p-6">
