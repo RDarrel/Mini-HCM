@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
-import Rows from "./rows";
+import RowsPerPage from "./rowsPerPage";
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,46 +8,36 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const CustomPagination = ({
-  page = 1,
-  maxPage = 5,
-  datas = [],
+const Pagination = ({
+  pagination,
   title = "",
   titleExtension = "s",
   setPage = () => {},
   setMaxPage = () => {},
 }) => {
-  const maxButtonCount = Math.ceil(datas.length / maxPage) || 1;
-  const lengthOfDatas = datas?.length || 0;
-
-  useEffect(() => {
-    setPage(1);
-  }, [maxButtonCount]);
-
-  const countOfDatas = () => {
-    const currentCount = page * maxPage;
-    return currentCount >= lengthOfDatas ? lengthOfDatas : currentCount;
-  };
-
+  const { page, limit, totalPages, hasNextPage, hasPrevPage, totalRecords } =
+    pagination;
+  const startRecord = totalRecords === 0 ? 0 : (page - 1) * limit + 1;
+  const endRecord = Math.min(page * limit, totalRecords);
   return (
     <div className={cn("flex justify-between items-center mt-5")}>
       <div>
         <p className="text-gray-500 ml-2">
-          {countOfDatas()} out of {datas?.length || 0}{" "}
-          {`${title}${lengthOfDatas > 1 ? titleExtension : ""}`}
+          Showing {startRecord}-{endRecord} of {totalRecords}
+          {`${title}${totalRecords > 1 ? titleExtension : ""}`}
         </p>
       </div>
       <div className="flex items-center gap-10">
-        <Rows maxPage={maxPage} setMaxPage={setMaxPage} />
+        <RowsPerPage maxPage={limit} setMaxPage={setMaxPage} />
         <div>
           <p className="font-semibold text-sm">
-            Page {page} of {maxButtonCount}
+            Page {page} of {totalPages}
           </p>
         </div>
         <div className="flex">
           <Button
             variant={"outline"}
-            disabled={page === 1}
+            disabled={hasPrevPage}
             className="w-8 h-8 mr-2 hidden lg:inline-flex items-center justify-center"
             onClick={() => setPage(1)}
           >
@@ -57,7 +46,7 @@ const CustomPagination = ({
           <Button
             variant={"outline"}
             className=" w-8 mr-2 h-8"
-            disabled={page === 1}
+            disabled={hasPrevPage}
             onClick={() => setPage(page === 1 ? page : page - 1)}
           >
             <ChevronLeft />
@@ -65,7 +54,7 @@ const CustomPagination = ({
           <Button
             variant={"outline"}
             className=" w-8 mr-2 h-8"
-            disabled={page === maxButtonCount}
+            disabled={hasNextPage}
             onClick={() => setPage(page === maxButtonCount ? page : page + 1)}
           >
             <ChevronRight />
@@ -73,8 +62,8 @@ const CustomPagination = ({
           <Button
             variant={"outline"}
             className=" w-8 h-8 hidden lg:inline-flex items-center justify-center "
-            disabled={page === maxButtonCount}
-            onClick={() => setPage(maxButtonCount)}
+            disabled={hasNextPage}
+            onClick={() => setPage(totalPages)}
           >
             <ChevronsRight />
           </Button>
@@ -84,4 +73,4 @@ const CustomPagination = ({
   );
 };
 
-export default CustomPagination;
+export default Pagination;

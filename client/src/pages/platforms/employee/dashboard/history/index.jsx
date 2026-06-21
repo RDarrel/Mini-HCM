@@ -18,6 +18,7 @@ import {
 import { CheckCircle2, History } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Formatter } from "@/services/utilities";
+import Pagination from "@/components/shared/pagination";
 
 const getRecordMinutes = (record) => {
   if (Number.isFinite(record?.totalLoggedMinutes)) {
@@ -34,9 +35,11 @@ const getRecordMinutes = (record) => {
 
 const AttHistory = () => {
   const { auth } = useSelector(({ auth }) => auth);
-  const { collections = [], isLoading } = useSelector(
-    ({ attendance }) => attendance,
-  );
+  const {
+    collections = [],
+    isLoading,
+    pagination,
+  } = useSelector(({ attendance }) => attendance);
   const { timezone = "Asia/Manila" } = auth;
   return (
     <Card className="border-border/70 shadow-sm">
@@ -116,6 +119,7 @@ const AttHistory = () => {
           </div>
         )}
       </CardContent>
+      <Pagination pagination={pagination} />
     </Card>
   );
 };

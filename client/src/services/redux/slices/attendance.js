@@ -4,6 +4,14 @@ const url = "attendance";
 
 const initialState = {
   collections: [],
+  pagination: {
+    page: 1,
+    limit: 10,
+    totalRecords: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  },
   isSuccess: false,
   isLoading: false,
   isSubmitting: false,
@@ -61,8 +69,9 @@ export const reduxSlice = createSlice({
         state.message = "";
       })
       .addCase(BROWSE.fulfilled, (state, action) => {
-        const { data } = action.payload;
+        const { data, pagination } = action.payload;
         state.collections = data;
+        state.pagination = pagination;
         state.isSuccess = true;
         state.isLoading = false;
       })

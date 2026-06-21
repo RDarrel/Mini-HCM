@@ -1,6 +1,7 @@
 const { db, admin } = require("../config/firebase");
 const { DateTime } = require("luxon");
 const { computeDailySummary } = require("../utilities/attendance");
+const { getPagination, getPaginationMeta } = require("../utilities/pagination");
 
 // Determines the work date used for attendance records.
 const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
@@ -21,9 +22,19 @@ const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
 };
 exports.browse = async (req, res) => {
   try {
-    const snapshot = await db
-      .collection("attendance")
+    const userId = req.user.uid;
+
+    const { page, limit, offset } = getPagination(req.query);
+
+    let query = db.collection("attendance").where("userId", "==", userId);
+
+    const totalSnapshot = await query.count().get();
+    const totalRecords = totalSnapshot.data().count;
+
+    const snapshot = await query
       .orderBy("createdAt", "desc")
+      .offset(offset)
+      .limit(limit)
       .get();
 
     const attendance = snapshot.docs.map((doc) => ({
@@ -32,11 +43,18 @@ exports.browse = async (req, res) => {
     }));
 
     res.json({
-      message: "Attendance Browse Successfully",
+      message: "Attendance history fetched successfully",
       data: attendance,
+      pagination: getPaginationMeta({
+        page,
+        limit,
+        totalRecords,
+      }),
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({
+      error: error.message,
+    });
   }
 };
 

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 const AVAILABLE_MAXPAGES = [5, 10, 15, 20, 25];
 
-const Rows = ({ maxPage, setMaxPage }) => {
+const RowsPerPage = ({ maxPage, setMaxPage }) => {
   return (
     <div className="flex  items-center ml-2">
       <p className="font-semibold text-h5 mr-3">Rows Per Page</p>
@@ -47,4 +47,4 @@ const Rows = ({ maxPage, setMaxPage }) => {
   );
 };
 
-export default Rows;
+export default RowsPerPage;
