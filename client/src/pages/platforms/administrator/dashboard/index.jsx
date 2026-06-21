@@ -121,20 +121,6 @@ const Dashboard = () => {
   return (
     <main className="min-h-[calc(100vh-3.25rem)] p-4 sm:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-normal">
-              Attendance Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Daily attendance overview across all employees.
-            </p>
-          </div>
-          <Badge variant="outline" className="w-fit rounded-md">
-            Today
-          </Badge>
-        </section>
-
         <Card className="border-border/70 shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -182,9 +168,6 @@ const Dashboard = () => {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <CardTitle>Present Employees</CardTitle>
-                <CardDescription>
-                  Employees with attendance records for today.
-                </CardDescription>
               </div>
               <div className="rounded-md border bg-muted/30 p-2">
                 <CalendarCheck className="size-5 text-muted-foreground" />
