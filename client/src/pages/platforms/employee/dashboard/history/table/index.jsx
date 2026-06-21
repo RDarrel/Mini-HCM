@@ -14,7 +14,9 @@ import { AttendanceStatus } from "../components";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import utils from "../../utils";
-const HistoryTable = ({ timezone }) => {
+const HistoryTable = () => {
+  const { auth } = useSelector(({ auth }) => auth);
+  const { timezone = "Asia/Manila" } = auth;
   const { collections } = useSelector(({ attendance }) => attendance);
   const [expandedRecordId, setExpandedRecordId] = useState(null);
 
@@ -23,6 +25,7 @@ const HistoryTable = ({ timezone }) => {
       currentId === recordId ? null : recordId,
     );
   }, []);
+
   return (
     <Table>
       <TableHeader>

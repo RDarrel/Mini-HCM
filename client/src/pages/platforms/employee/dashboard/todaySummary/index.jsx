@@ -1,4 +1,3 @@
-import { PunchCell, SummaryBox } from "../components";
 import { Formatter } from "@/services/utilities";
 import {
   Card,
@@ -10,7 +9,6 @@ import {
 import { ClipboardList } from "lucide-react";
 
 const TodaySummary = ({
-  progress,
   summaryItems,
   todayRecord,
   workedMinutes,
@@ -72,3 +70,26 @@ const TodaySummary = ({
 };
 
 export default TodaySummary;
+
+const PunchCell = ({ label, value }) => (
+  <div>
+    <p className="text-sm text-muted-foreground">{label}</p>
+    <p className="mt-1 font-semibold tabular-nums">{value}</p>
+  </div>
+);
+
+const SummaryBox = ({ icon, label, value }) => {
+  const SummaryIcon = icon;
+
+  return (
+    <div className="rounded-md border bg-background p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        {SummaryIcon && (
+          <SummaryIcon className="size-4 text-muted-foreground" />
+        )}
+      </div>
+      <p className="mt-2 text-lg font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+};

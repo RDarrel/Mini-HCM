@@ -63,7 +63,10 @@ const Dashboard = () => {
     [todayRecord],
   );
 
-  const summaryItems = utils.buildAttSummaryItems(summary);
+  const summaryItems = useMemo(
+    () => utils.buildAttSummaryItems(summary),
+    [summary],
+  );
 
   return (
     <main className="min-h-[calc(100vh-3.25rem)] bg-muted/20 p-4 sm:p-6">

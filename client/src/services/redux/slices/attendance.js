@@ -16,6 +16,8 @@ const initialState = {
   isSuccess: false,
   isLoading: false,
   isSubmitting: false,
+  isBrowsing: false, // For History Page
+  isFetchingTodayRecord: false,
   message: "",
 };
 
@@ -83,7 +85,7 @@ export const reduxSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(BROWSE.pending, (state) => {
-        state.isLoading = true;
+        state.isBrowsing = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -92,16 +94,16 @@ export const reduxSlice = createSlice({
         state.collections = data;
         state.pagination = pagination;
         state.isSuccess = true;
-        state.isLoading = false;
+        state.isBrowsing = false;
       })
       .addCase(BROWSE.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isLoading = false;
+        state.isBrowsing = false;
       })
 
       .addCase(GET_TODAY_RECORD.pending, (state) => {
-        state.isLoading = true;
+        state.isFetchingTodayRecord = true;
         state.isSuccess = false;
         state.message = "";
       })
@@ -109,12 +111,12 @@ export const reduxSlice = createSlice({
         const { data } = action.payload;
         state.todayRecord = data;
         state.isSuccess = true;
-        state.isLoading = false;
+        state.isFetchingTodayRecord = false;
       })
       .addCase(GET_TODAY_RECORD.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
-        state.isLoading = false;
+        state.isFetchingTodayRecord = false;
       })
       .addCase(PUNCH.pending, (state) => {
         state.isSubmitting = true;

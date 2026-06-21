@@ -1,5 +1,4 @@
 import { DateTime } from "luxon";
-import { InfoPanel, InlineMetric } from "../components";
 import { Formatter } from "@/services/utilities";
 import {
   Card,
@@ -126,3 +125,29 @@ const Punch = ({
 };
 
 export default Punch;
+
+const InfoPanel = ({ icon, label, value }) => {
+  const PanelIcon = icon;
+
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {PanelIcon && <PanelIcon className="size-4 text-primary" />}
+        <span>{label}</span>
+      </div>
+      <p className="mt-2 font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+};
+
+const InlineMetric = ({ icon, label, value }) => {
+  const MetricIcon = icon;
+
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <MetricIcon className="size-4 text-primary" />
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold tabular-nums">{value}</span>
+    </div>
+  );
+};

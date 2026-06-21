@@ -55,7 +55,7 @@ const TableLoading = ({
       <div
         className={cn(
           "flex justify-between items-center mt-4",
-          paginationClassName && paginationClassName
+          paginationClassName && paginationClassName,
         )}
       >
         <div className="flex items-center gap-3 ml-2">
