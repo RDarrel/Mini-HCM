@@ -2,7 +2,6 @@ const { db, admin } = require("../config/firebase");
 const { DateTime } = require("luxon");
 const { computeDailySummary } = require("../utilities/attendance");
 const { getPagination, getPaginationMeta } = require("../utilities/pagination");
-const now = new Date();
 
 // Determines the work date used for attendance records.
 const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
@@ -21,13 +20,14 @@ const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
 
   return workDate.toFormat("yyyy-MM-dd");
 };
+
 exports.browse = async (req, res) => {
   try {
     const userId = req.user.uid;
 
     const { page, limit, offset } = getPagination(req.query);
 
-    let query = db.collection("attendance").where("userId", "==", userId);
+    let query = db.collection("dailySummary").where("userId", "==", userId);
 
     const totalSnapshot = await query.count().get();
     const totalRecords = totalSnapshot.data().count;
@@ -38,14 +38,14 @@ exports.browse = async (req, res) => {
       .limit(limit)
       .get();
 
-    const attendance = snapshot.docs.map((doc) => ({
+    const summary = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
     res.json({
       message: "Attendance history fetched successfully",
-      data: attendance,
+      data: summary,
       pagination: getPaginationMeta({
         page,
         limit,
@@ -59,20 +59,51 @@ exports.browse = async (req, res) => {
   }
 };
 
+// Fetch the summary record linked to an attendance entry.
+const getDailySummary = async (attendanceId) => {
+  const doc = await db.collection("dailySummary").doc(attendanceId).get();
+
+  return doc.exists
+    ? {
+        id: doc.id,
+        ...doc.data(),
+      }
+    : null;
+};
+
+// Returns today's attendance record along with its computed summary if available.
 exports.get_today_record = async (req, res) => {
   try {
     const { uid: userId, schedule, timezone } = req.user;
+    const now = new Date();
+
     const workDate = getWorkDate(now, schedule, timezone);
+
     const snapshot = await db
       .collection("attendance")
       .where("userId", "==", userId)
       .where("workDate", "==", workDate)
       .limit(1)
       .get();
-    const doc = snapshot?.docs[0] || null;
+
+    const doc = snapshot.docs[0] || null;
+
+    if (!doc) {
+      return res.json({
+        message: "Today record fetched successfully",
+        data: null,
+      });
+    }
+
+    const summary = await getDailySummary(doc.id);
+
     res.json({
-      message: "Attendance history fetched successfully",
-      data: doc ? { id: doc.id, ...doc.data() } : null,
+      message: "Today record fetched successfully",
+      data: {
+        id: doc.id,
+        ...doc.data(),
+        summary,
+      },
     });
   } catch (error) {
     res.status(400).json({
@@ -86,6 +117,7 @@ const punchValidation = async ({ userId, punchType, schedule, timezone }) => {
   if (!["in", "out"].includes(punchType)) {
     throw new Error("Invalid punch type");
   }
+  const now = new Date();
   const workDate = getWorkDate(now, schedule, timezone);
 
   // Check if the employee has an active attendance record.
@@ -133,10 +165,32 @@ const punchIn = async ({ userId, workDate, timezone }) => {
   });
 
   const doc = await docRef.get();
+  const attendance = doc.data();
+
+  // Create an initial summary record so attendance history can
+  // immediately display the ongoing shift after Punch In.
+  await db.collection("dailySummary").doc(doc.id).set({
+    attendanceId: doc.id,
+    userId,
+    workDate,
+    timeIn: attendance.timeIn,
+    timeOut: null,
+    regularMinutes: 0,
+    overtimeMinutes: 0,
+    nightDiffMinutes: 0,
+    lateMinutes: 0,
+    undertimeMinutes: 0,
+    totalLoggedMinutes: 0,
+    status: "in_progress",
+    timezone,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
 
   return {
     id: doc.id,
-    ...doc.data(),
+    ...attendance,
+    status: "in_progress",
   };
 };
 
@@ -160,19 +214,31 @@ const punchOut = async ({ schedule, attendanceDoc, timezone }) => {
     timezone,
   });
 
-  // Store computed attendance metrics to avoid recalculation.
-  await db.collection("dailySummary").add({
-    attendanceId: attendanceDoc.id,
-    userId: attendance.userId,
-    workDate: attendance.workDate,
-    ...summary,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    timezone: attendance.timezone,
-  });
+  // Finalize the reporting record used by dashboards,
+  // attendance history, and admin reports.
+  await db
+    .collection("dailySummary")
+    .doc(attendanceDoc.id)
+    .set(
+      {
+        attendanceId: attendanceDoc.id,
+        userId: attendance.userId,
+        workDate: attendance.workDate,
+        timeIn: attendance.timeIn,
+        timeOut: attendance.timeOut,
+        ...summary,
+        timezone: attendance.timezone,
+        status: "completed",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
 
   return {
     id: attendanceDoc.id,
     ...attendance,
+    ...summary,
+    status: "completed",
   };
 };
 

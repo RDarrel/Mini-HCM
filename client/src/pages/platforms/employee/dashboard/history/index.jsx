@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import {
   Card,
   CardContent,
@@ -21,19 +21,7 @@ import { Formatter } from "@/services/utilities";
 import Pagination from "@/components/shared/pagination";
 import { useDispatch } from "react-redux";
 import { BROWSE } from "@/services/redux/slices/attendance";
-
-const getRecordMinutes = (record) => {
-  if (Number.isFinite(record?.totalLoggedMinutes)) {
-    return record.totalLoggedMinutes;
-  }
-
-  if (!record?.timeIn || !record?.timeOut) return 0;
-
-  const timeIn = Formatter.toJSDate(record.timeIn);
-  const timeOut = Formatter.toJSDate(record.timeOut);
-
-  return Math.floor((timeOut.getTime() - timeIn.getTime()) / (1000 * 60));
-};
+import { ATTENDANCE_STATUS } from "@/constants";
 
 const AttHistory = () => {
   const { auth } = useSelector(({ auth }) => auth);
@@ -110,7 +98,9 @@ const AttHistory = () => {
                       </TableCell>
                       <TableCell className="font-medium tabular-nums">
                         {record?.timeOut
-                          ? Formatter.duration(getRecordMinutes(record))
+                          ? Formatter.duration(
+                              Fomatter.duration(record.totalLoggedMinutes),
+                            )
                           : "-"}
                       </TableCell>
                       <TableCell className="text-right">
@@ -166,19 +156,24 @@ const HistoryCard = memo(({ record, timezone = "Asia/Manila" }) => (
       <MobileHistoryMetric
         label="Total"
         value={
-          record?.timeOut ? Formatter.duration(getRecordMinutes(record)) : "-"
+          record?.timeOut
+            ? Formatter.duration(Fomatter.duration(record.totalLoggedMinutes))
+            : "-"
         }
       />
     </div>
   </div>
 ));
 
-const AttendanceStatus = ({ status }) => (
-  <Badge variant="outline" className="inline-flex gap-1.5 rounded-md">
-    {status === "Completed" && <CheckCircle2 className="size-3" />}
-    {status || "Pending"}
-  </Badge>
-);
+const AttendanceStatus = ({ status }) => {
+  const { variant, label } = ATTENDANCE_STATUS[status.toLowerCase()];
+  return (
+    <Badge variant={variant} className="inline-flex gap-1.5 rounded-md">
+      {label === "Completed" && <CheckCircle2 className="size-3" />}
+      {label}
+    </Badge>
+  );
+};
 
 const MobileHistoryMetric = ({ label, value }) => (
   <div className="min-w-0">

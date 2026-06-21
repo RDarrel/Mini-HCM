@@ -18,11 +18,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import utils from "../utils";
 import { useSelector, useDispatch } from "react-redux";
 import { PUNCH } from "@/services/redux/slices/attendance";
 import { useState } from "react";
 import Spinner from "@/components/shared/spinner";
+import utils from "../utils";
+
 const formatFullDate = (date, timezone) =>
   DateTime.fromJSDate(date).setZone(timezone).toFormat("cccc, LLLL d");
 const Punch = ({
@@ -34,7 +35,7 @@ const Punch = ({
   timezone = "Asia/Manila",
 }) => {
   const { todayRecord } = useSelector(({ attendance }) => attendance);
-  const [actionType, setActionType] = useState("in");
+  const [actionType, setActionType] = useState("");
   const dispatch = useDispatch();
   const handlePunch = (punchType) => {
     setActionType(punchType);

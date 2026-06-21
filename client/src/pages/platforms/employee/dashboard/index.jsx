@@ -1,17 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  BROWSE,
-  GET_TODAY_RECORD,
-  PUNCH,
-} from "@/services/redux/slices/attendance";
+import { BROWSE, GET_TODAY_RECORD } from "@/services/redux/slices/attendance";
 import { Formatter } from "@/services/utilities";
 import { Activity, CalendarClock, Clock3, History, Timer } from "lucide-react";
 import utils from "./utils";
 import Punch from "./punch";
 import TodaySummary from "./todaySummary";
 import AttHistory from "./history";
-import { toast } from "sonner";
 const DEFAULT_SCHEDULE = {
   start: "09:00",
   end: "18:00",
