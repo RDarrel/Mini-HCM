@@ -14,17 +14,14 @@ const DEFAULT_TIMEZONE = "Asia/Manila";
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { auth = {} } = useSelector(({ auth }) => auth);
-  const {
-    isSubmitting,
-    pagination,
-    todayRecord = {},
-  } = useSelector(({ attendance }) => attendance);
+  const { pagination, todayRecord = {} } = useSelector(
+    ({ attendance }) => attendance,
+  );
 
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
   const timezone = auth?.timezone || DEFAULT_TIMEZONE;
-  const scheduledMinutes = utils.compute.scheduleMinutes(schedule);
 
   useEffect(() => {
     dispatch(BROWSE({ page: pagination.page, limit: pagination.limit }));
@@ -45,13 +42,7 @@ const Dashboard = () => {
     [todayRecord, schedule, timezone, now],
   );
 
-  const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
   const workedMinutes = totalLoggedMinutes;
-
-  const progress = Math.min(
-    100,
-    Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
-  );
 
   const shiftLabel = useMemo(
     () => utils.shiftLabel(auth?.schedule, timezone),
@@ -64,26 +55,24 @@ const Dashboard = () => {
   );
 
   const summaryItems = useMemo(
-    () => utils.buildAttSummaryItems(summary),
-    [summary],
+    () =>
+      utils.buildAttSummaryItems({ ...summary, status: todayRecord?.status }),
+    [summary, todayRecord.status],
   );
 
   return (
     <main className="min-h-[calc(100vh-3.25rem)] bg-muted/20 p-4 sm:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
         <Punch
-          isPunchedIn={isPunchedIn}
           workedMinutes={workedMinutes}
           shiftLabel={shiftLabel}
           statusLabel={statusLabel}
-          isSubmitting={isSubmitting}
           now={now}
           timezone={timezone}
         />
 
         <section className="grid gap-4">
           <TodaySummary
-            progress={progress}
             summaryItems={summaryItems}
             workedMinutes={workedMinutes}
             todayRecord={todayRecord}

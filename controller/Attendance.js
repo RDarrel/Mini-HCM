@@ -102,7 +102,7 @@ exports.get_today_record = async (req, res) => {
       data: {
         id: doc.id,
         ...doc.data(),
-        summary,
+        ...summary,
       },
     });
   } catch (error) {

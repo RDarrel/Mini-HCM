@@ -1,14 +1,8 @@
 import { DateTime } from "luxon";
 import { Clock3, Timer, Activity, CalendarClock, Moon } from "lucide-react";
-import dailySummary from "./dailySummary";
 import { Formatter } from "@/services/utilities";
+import dailySummary from "./dailySummary";
 const DEFAULT_TIMEZONE = "Asia/Manila";
-
-const getMinutesFromTime = (time = "00:00") => {
-  const [hours = "0", minutes = "0"] = time.split(":");
-
-  return Number(hours) * 60 + Number(minutes);
-};
 
 const formatScheduleTime = (time = "00:00", timezone = DEFAULT_TIMEZONE) => {
   const [hours = "0", minutes = "0"] = time.split(":");
@@ -24,12 +18,6 @@ const formatScheduleTime = (time = "00:00", timezone = DEFAULT_TIMEZONE) => {
 const utils = {
   compute: {
     dailySummary,
-    scheduleMinutes: (schedule) => {
-      if (!schedule) return 0;
-      const minutes =
-        getMinutesFromTime(schedule.end) - getMinutesFromTime(schedule.start);
-      return minutes < 0 ? minutes + 24 * 60 : minutes;
-    },
   },
 
   statusLabel: (attendance = null) => {
@@ -54,8 +42,10 @@ const utils = {
       overtimeMinutes = 0,
       nightDiffMinutes = 0,
       lateMinutes = 0,
-      undertimeMinutes = 0,
+      status = "in_progress",
+      undertimeMinutes: UTM = 0,
     } = attendance;
+    const undertimeMinutes = status === "in_progress" ? 0 : UTM;
     return [
       {
         label: "Regular Hours",

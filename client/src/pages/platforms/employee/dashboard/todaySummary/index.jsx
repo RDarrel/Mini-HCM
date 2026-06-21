@@ -7,6 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ClipboardList } from "lucide-react";
+import { useSelector } from "react-redux";
+import TodaySummarySkeleton from "./skeleton";
 
 const TodaySummary = ({
   summaryItems,
@@ -14,6 +16,9 @@ const TodaySummary = ({
   workedMinutes,
   timezone = "Asia/Manila",
 }) => {
+  const { isFetchingTodayRecord: isLoading } = useSelector(
+    ({ attendance }) => attendance,
+  );
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
@@ -28,42 +33,36 @@ const TodaySummary = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-            <span>Progress</span>
-            <span>{progress}%</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div> */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-          {summaryItems.map((item) => (
-            <SummaryBox
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              value={item.value}
-            />
-          ))}
-        </div>
-        <div className="grid gap-3 rounded-md border bg-muted/20 p-3 sm:grid-cols-3">
-          <PunchCell
-            label="Punch In"
-            value={Formatter.time(todayRecord?.timeIn, timezone)}
-          />
-          <PunchCell
-            label="Punch Out"
-            value={Formatter.time(todayRecord?.timeOut, timezone)}
-          />
-          <PunchCell
-            label="Total Logged"
-            value={Formatter.duration(workedMinutes)}
-          />
-        </div>
+        {isLoading ? (
+          <TodaySummarySkeleton />
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+              {summaryItems.map((item) => (
+                <SummaryBox
+                  key={item.label}
+                  icon={item.icon}
+                  label={item.label}
+                  value={item.value}
+                />
+              ))}
+            </div>
+            <div className="grid gap-3 rounded-md border bg-muted/20 p-3 sm:grid-cols-3">
+              <PunchCell
+                label="Punch In"
+                value={Formatter.time(todayRecord?.timeIn, timezone)}
+              />
+              <PunchCell
+                label="Punch Out"
+                value={Formatter.time(todayRecord?.timeOut, timezone)}
+              />
+              <PunchCell
+                label="Total Logged"
+                value={Formatter.duration(workedMinutes)}
+              />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

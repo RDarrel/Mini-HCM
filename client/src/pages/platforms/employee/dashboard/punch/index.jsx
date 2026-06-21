@@ -22,18 +22,22 @@ import { PUNCH } from "@/services/redux/slices/attendance";
 import { useState } from "react";
 import Spinner from "@/components/shared/spinner";
 import utils from "../utils";
+import PunchSkeleton from "./skeleton";
 
 const formatFullDate = (date, timezone) =>
   DateTime.fromJSDate(date).setZone(timezone).toFormat("cccc, LLLL d");
 const Punch = ({
   shiftLabel = "",
   statusLabel = "",
-  isSubmitting = false,
   workedMinutes = 0,
   now = new Date(),
   timezone = "Asia/Manila",
 }) => {
-  const { todayRecord } = useSelector(({ attendance }) => attendance);
+  const {
+    todayRecord,
+    isSubmitting,
+    isFetchingTodayRecord: isLoading,
+  } = useSelector(({ attendance }) => attendance);
   const [actionType, setActionType] = useState("");
   const dispatch = useDispatch();
   const handlePunch = (punchType) => {
@@ -70,7 +74,10 @@ const Punch = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+        {isLoading ? (
+          <PunchSkeleton />
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
           <div className="grid gap-3 sm:grid-cols-3">
             <InfoPanel
               icon={CalendarClock}
@@ -118,7 +125,8 @@ const Punch = ({
               )}
             </Button>
           </div>
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
