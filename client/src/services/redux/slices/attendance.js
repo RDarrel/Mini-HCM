@@ -122,14 +122,20 @@ export const reduxSlice = createSlice({
         state.message = "";
       })
       .addCase(PUNCH.fulfilled, (state, action) => {
-        const { data } = action.payload;
+        const { data = null } = action.payload;
+        if (!data) return;
+
         const _collections = [...state.collections];
-        if (data?.punchType === "in") {
-          _collections.unshift(data);
-        } else {
-          const index = _collections.findIndex((item) => item.id === data.id);
+        const index = _collections.findIndex((item) => item.id === data.id);
+
+        if (index > -1) {
           _collections[index] = data;
+          state.todayRecord = data;
+        } else if (data?.punchType === "in" && state.pagination.page === 1) {
+          _collections.unshift(data);
+          state.todayRecord = data;
         }
+
         state.collections = _collections;
         state.isSuccess = true;
         state.isSubmitting = false;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   BROWSE,
@@ -26,6 +26,7 @@ const Dashboard = () => {
     pagination,
     todayRecord = {},
   } = useSelector(({ attendance }) => attendance);
+
   const [now, setNow] = useState(new Date());
 
   const schedule = auth?.schedule || DEFAULT_SCHEDULE;
@@ -53,17 +54,28 @@ const Dashboard = () => {
     lateMinutes,
     undertimeMinutes,
     totalLoggedMinutes,
-  } = utils.compute.dailySummary(todayRecord, schedule, timezone);
+  } = useMemo(
+    () => utils.compute.dailySummary(todayRecord, schedule, timezone),
+    [todayRecord, schedule, timezone, now],
+  );
 
   const isPunchedIn = Boolean(todayRecord?.timeIn && !todayRecord?.timeOut);
   const workedMinutes = totalLoggedMinutes;
+
   const progress = Math.min(
     100,
     Math.round((workedMinutes / Math.max(scheduledMinutes, 1)) * 100),
   );
 
-  const shiftLabel = utils.shiftLabel(auth?.schedule, timezone);
-  const statusLabel = utils.statusLabel(todayRecord);
+  const shiftLabel = useMemo(
+    () => utils.shiftLabel(auth?.schedule, timezone),
+    [auth?.schedule, timezone],
+  );
+
+  const statusLabel = useMemo(
+    () => utils.statusLabel(todayRecord),
+    [todayRecord],
+  );
 
   const summaryItems = [
     {
@@ -93,21 +105,10 @@ const Dashboard = () => {
     },
   ];
 
-  const handlePunch = (punchType) => {
-    dispatch(
-      PUNCH({
-        punchType,
-      }),
-    )
-      .unwrap()
-      .catch((error) => toast.error(error?.message || "Something went wrong"));
-  };
-
   return (
     <main className="min-h-[calc(100vh-3.25rem)] bg-muted/20 p-4 sm:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
         <Punch
-          handlePunch={handlePunch}
           isPunchedIn={isPunchedIn}
           workedMinutes={workedMinutes}
           shiftLabel={shiftLabel}

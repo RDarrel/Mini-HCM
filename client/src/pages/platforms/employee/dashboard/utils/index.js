@@ -40,9 +40,7 @@ const utils = {
     if (!schedule) return "No Shift Scheduled";
     return `${formatScheduleTime(schedule.start, timezone)} - ${formatScheduleTime(schedule.end, timezone)}`;
   },
-  canPunchIn: (attendance = null) => {
-    if (!attendance) return true;
-  },
+
   canPunchOut: (attendance = null) => {
     if (!attendance) return false;
     if (attendance?.timeIn && !attendance.timeOut) return true;

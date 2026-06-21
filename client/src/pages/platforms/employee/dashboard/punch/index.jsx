@@ -17,18 +17,42 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import utils from "../utils";
+import { useSelector, useDispatch } from "react-redux";
+import { PUNCH } from "@/services/redux/slices/attendance";
+import { useState } from "react";
+import Spinner from "@/components/shared/spinner";
 const formatFullDate = (date, timezone) =>
   DateTime.fromJSDate(date).setZone(timezone).toFormat("cccc, LLLL d");
 const Punch = ({
   shiftLabel = "",
   statusLabel = "",
   isSubmitting = false,
-  isPunchedIn = false,
   workedMinutes = 0,
   now = new Date(),
   timezone = "Asia/Manila",
-  handlePunch = () => {},
 }) => {
+  const { todayRecord } = useSelector(({ attendance }) => attendance);
+  const [actionType, setActionType] = useState("in");
+  const dispatch = useDispatch();
+  const handlePunch = (punchType) => {
+    setActionType(punchType);
+    dispatch(
+      PUNCH({
+        punchType,
+      }),
+    )
+      .unwrap()
+      .then(() => {
+        setActionType("");
+        toast.success(`Punched ${punchType} successfully`);
+      })
+      .catch((error) => {
+        setActionType("");
+        toast.error(error?.message || "Something went wrong");
+      });
+  };
   return (
     <Card>
       <CardHeader>
@@ -68,20 +92,26 @@ const Punch = ({
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
             <Button
               size="lg"
-              // disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
+              disabled={isSubmitting || Boolean(todayRecord?.timeIn)}
               onClick={() => handlePunch("in")}
             >
               <ArrowDownToLine />
               Punch In
+              {actionType === "in" && isSubmitting && (
+                <Spinner isLoading={true} />
+              )}
             </Button>
             <Button
               size="lg"
               variant="outline"
-              disabled={isSubmitting || !isPunchedIn}
+              disabled={isSubmitting || !utils.canPunchOut(todayRecord)}
               onClick={() => handlePunch("out")}
             >
               <ArrowUpFromLine />
               Punch Out
+              {actionType === "out" && isSubmitting && (
+                <Spinner isLoading={true} />
+              )}
             </Button>
           </div>
         </div>
