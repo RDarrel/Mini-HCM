@@ -8,8 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RECORDS } from "@/services/redux/slices/attendance";
-import { toISODate } from "@/services/utilities";
+import { RECORDS } from "@/redux/slices/attendance";
+import { toISODate } from "@/utilities";
 import Filters from "./filters";
 import TableRecords from "./table";
 import DebouncedInput from "@/components/shared/debouncedInput";

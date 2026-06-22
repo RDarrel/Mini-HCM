@@ -1,7 +1,7 @@
 import axioKit from "./axioKit";
 import handlePagination from "./pagination";
-import Male from "../../assets/male.jpg";
-import Female from "../../assets/female.jpg";
+import Male from "../assets/male.jpg";
+import Female from "../assets/female.jpg";
 import globalSearch from "./globalSearch";
 import Formatter from "./formatter";
 import { toISODate, getTimezone } from "./date";

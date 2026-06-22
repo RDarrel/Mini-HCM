@@ -8,8 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Formatter } from "@/services/utilities";
-import { RECORDS } from "@/services/redux/slices/attendance";
+import { Formatter } from "@/utilities";
+import { RECORDS } from "@/redux/slices/attendance";
 import { CalendarX } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import StatusBadge from "@/components/shared/statusBadge";

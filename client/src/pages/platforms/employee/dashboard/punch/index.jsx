@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import {
   Card,
   CardContent,
@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSelector, useDispatch } from "react-redux";
-import { PUNCH } from "@/services/redux/slices/attendance";
+import { PUNCH } from "@/redux/slices/attendance";
 import { useState } from "react";
 import Spinner from "@/components/shared/spinner";
 import utils from "../utils";

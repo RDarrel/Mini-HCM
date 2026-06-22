@@ -1,5 +1,5 @@
 import { Clock3, Timer, Activity, CalendarClock, Moon } from "lucide-react";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import dailySummary from "./dailySummary";
 
 const utils = {

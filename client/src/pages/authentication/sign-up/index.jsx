@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useDispatch, useSelector } from "react-redux";
-import { REGISTER } from "@/services/redux/slices/auth";
-import { getTimezone } from "@/services/utilities";
+import { REGISTER } from "@/redux/slices/auth";
+import { getTimezone } from "@/utilities";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 const getPassError = (password, confirmPassword) => {

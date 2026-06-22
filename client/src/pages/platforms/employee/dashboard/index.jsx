@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { HISTORY, TODAY_RECORD } from "@/services/redux/slices/attendance";
+import { HISTORY, TODAY_RECORD } from "@/redux/slices/attendance";
 import utils from "./utils";
 import Punch from "./punch";
 import TodaySummary from "./todaySummary";

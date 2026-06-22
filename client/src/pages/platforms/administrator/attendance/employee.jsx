@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pen } from "lucide-react";

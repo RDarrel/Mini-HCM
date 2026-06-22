@@ -1,4 +1,4 @@
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import {
   Card,
   CardContent,

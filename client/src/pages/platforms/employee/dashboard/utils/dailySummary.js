@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 const { toJSDate } = Formatter;
 
 const isValidDateTime = (dateTime) =>

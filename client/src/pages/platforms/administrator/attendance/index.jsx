@@ -16,12 +16,12 @@ import {
 } from "@/components/ui/card";
 import { useSelector, useDispatch } from "react-redux";
 import { TableSkeleton } from "@/components/shared/skeleton";
-import { RECORDS } from "@/services/redux/slices/attendance";
+import { RECORDS } from "@/redux/slices/attendance";
 import Pagination from "@/components/shared/pagination";
 import { CalendarX } from "lucide-react";
 import CustomDatePicker from "@/components/shared/datepicker";
 import DebouncedInput from "@/components/shared/debouncedInput";
-import { toISODate } from "@/services/utilities";
+import { toISODate } from "@/utilities";
 import Employee from "./employee";
 import EmployeeModal from "./modal";
 

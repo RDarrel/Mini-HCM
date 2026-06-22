@@ -4,9 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux"; // Import Provider from react-redux
 import { Toaster } from "@/components/ui/sonner";
 import App from "./App.jsx";
-import store from "./services/redux/store";
+import store from "./redux/store.js";
 import axios from "axios";
-import { ENDPOINT } from "./services/utilities";
+import { ENDPOINT } from "./utilities/index.js";
 import "./index.css";
 
 axios.defaults.baseURL = ENDPOINT;
@@ -19,5 +19,5 @@ createRoot(document.getElementById("root")).render(
         <App />
       </Provider>
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );

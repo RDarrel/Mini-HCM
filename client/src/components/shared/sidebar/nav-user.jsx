@@ -19,8 +19,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { useSelector, useDispatch } from "react-redux";
-import { PresetImage } from "@/services/utilities";
-import { LOGOUT } from "@/services/redux/slices/auth";
+import { PresetImage } from "@/utilities";
+import { LOGOUT } from "@/redux/slices/auth";
 import { toast } from "sonner";
 
 export function NavUser() {

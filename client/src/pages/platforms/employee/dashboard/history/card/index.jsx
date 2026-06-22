@@ -1,6 +1,6 @@
 import { memo } from "react";
-import { Formatter } from "@/services/utilities";
-import { AttendanceStatus, DailySummaryTile } from "../components";
+import { Formatter } from "@/utilities";
+import { DailySummaryTile } from "../components";
 import {
   Collapsible,
   CollapsibleContent,
@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import utils from "../../utils";
+import StatusBadge from "@/components/shared/statusBadge";
 
 const HistoryCard = memo(({ record, timezone = "Asia/Manila" }) => (
   <div className="rounded-md border bg-background p-3 shadow-xs">
@@ -22,7 +23,7 @@ const HistoryCard = memo(({ record, timezone = "Asia/Manila" }) => (
           {Formatter.time(record.timeOut, timezone)}
         </p>
       </div>
-      <AttendanceStatus status={record.status} />
+      <StatusBadge status={record.status} />
     </div>
     <div className="mt-3 grid grid-cols-3 gap-2 rounded-md bg-muted/30 p-2 text-sm">
       <MobileHistoryMetric

@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSelector } from "react-redux";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import { DailySummaryTile } from "../components";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";

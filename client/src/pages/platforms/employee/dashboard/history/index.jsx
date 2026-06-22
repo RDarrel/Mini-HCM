@@ -10,7 +10,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import { History } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { HISTORY } from "@/services/redux/slices/attendance";
+import { HISTORY } from "@/redux/slices/attendance";
 import { TableSkeleton } from "@/components/shared/skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import Pagination from "@/components/shared/pagination";

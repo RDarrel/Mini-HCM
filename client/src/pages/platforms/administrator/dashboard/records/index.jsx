@@ -14,10 +14,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useMemo } from "react";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import { useSelector, useDispatch } from "react-redux";
 import { TableSkeleton } from "@/components/shared/skeleton";
-import { RECORDS } from "@/services/redux/slices/attendance";
+import { RECORDS } from "@/redux/slices/attendance";
 import { CalendarX } from "lucide-react";
 import Pagination from "@/components/shared/pagination";
 import StatusBadge from "@/components/shared/statusBadge";

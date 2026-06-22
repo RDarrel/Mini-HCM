@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
-import { toISODate } from "@/services/utilities";
+import { toISODate } from "@/utilities";
 import { useEffect, useMemo } from "react";
-import { RECORDS, TODAY_SUMMARY } from "@/services/redux/slices/attendance";
+import { RECORDS, TODAY_SUMMARY } from "@/redux/slices/attendance";
 import buildSummaryItems from "./buildSummary";
 import KPIs from "./Kpis";
 import EmployeeRecords from "./records";

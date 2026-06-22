@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Formatter } from "@/services/utilities";
+import { Formatter } from "@/utilities";
 import {
   LockedDate,
   TimeInput,
@@ -22,7 +22,7 @@ import {
   TimeOutDateButton,
 } from "./components";
 import { toast } from "sonner";
-import { UPDATE } from "@/services/redux/slices/attendance";
+import { UPDATE } from "@/redux/slices/attendance";
 import { timeValue, isoDateValue, getNextWorkDate, initialForm } from "./utils";
 import Spinner from "@/components/shared/spinner";
 
