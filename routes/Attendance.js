@@ -11,11 +11,11 @@ const router = require("express").Router(),
   verifyAdmin = require("../middleware/verifyAdmin");
 
 router
-  //EMPLOYEE
-  .get("/", verifyToken, myHistory)
-  .get("/today", verifyToken, todayRecord)
+  //Employee
+  .get("/history", verifyToken, myHistory)
+  .get("/today/record", verifyToken, todayRecord)
   .post("/punch", verifyToken, punch)
-  //ADMIN
+  //Admin
   .get("/today/summary", verifyToken, verifyAdmin, todaySummary)
   .get("/records", verifyToken, verifyAdmin, records)
   .put("/update", verifyToken, verifyAdmin, update);

@@ -286,6 +286,8 @@ exports.punch = async (req, res) => {
   }
 };
 
+// Admin routes
+
 // Get today's employees summary
 exports.todaySummary = async (req, res) => {
   try {
