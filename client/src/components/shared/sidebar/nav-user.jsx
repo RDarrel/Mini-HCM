@@ -1,5 +1,5 @@
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from "lucide-react";
-
+import { capitalize } from "lodash";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -73,7 +73,9 @@ export function NavUser() {
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{fname}</span>
+                  <span className="truncate font-medium">
+                    {capitalize(fname)}
+                  </span>
                   <span className="truncate text-xs">{auth?.email}</span>
                 </div>
               </div>
