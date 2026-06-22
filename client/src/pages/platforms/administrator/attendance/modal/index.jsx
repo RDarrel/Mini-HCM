@@ -8,7 +8,7 @@ import {
   Save,
   UserRound,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +31,7 @@ import {
 } from "./components";
 import { toast } from "sonner";
 import { UPDATE } from "@/services/redux/slices/attendance";
+import Spinner from "@/components/shared/spinner";
 
 const initialForm = {
   timeInTime: "",
@@ -56,6 +57,7 @@ const isoDateValue = (value, timezone) => {
 const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   const { isSubmitting } = useSelector(({ attendance }) => attendance);
   const [form, setForm] = useState(initialForm);
+  const dispatch = useDispatch();
 
   const timezone = employee?.timezone || "Asia/Manila";
   const workDate = employee?.workDate || "";
@@ -138,10 +140,10 @@ const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
 
     const payload = {
       id: employee.attendanceId || employee.id,
+      userId: employee.userId,
       timeIn: `${workDate}T${form.timeInTime}:00`,
       timeOut: `${form.timeOutDate}T${form.timeOutTime}:00`,
       reason: form.reason.trim(),
-      timezone,
     };
 
     dispatch(UPDATE(payload))
@@ -257,7 +259,7 @@ const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
             <Button type="submit" disabled={isSubmitting}>
               <Save className="size-4" />
               Save Changes
-              {isSubmitting && <Loader className="size-4 animate-spin" />}
+              <Spinner isLoading={isSubmitting} />
             </Button>
           </DialogFooter>
         </form>

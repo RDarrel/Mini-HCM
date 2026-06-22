@@ -14,7 +14,7 @@ const update = async (entity, data, action = "update") => {
   return await axios
     .put(`${entity}/${action}`, data, {
       headers: {
-        Authorization: `QTracy ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     })
     .then(({ data }) => data)

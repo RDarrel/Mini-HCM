@@ -376,16 +376,13 @@ exports.records = async (req, res) => {
 
         if (!acc[key]) {
           acc[key] = {
-            userId: summary.userId,
+            ...summary,
             lateMinutes: 0,
             overtimeMinutes: 0,
             nightDiffMinutes: 0,
             regularMinutes: 0,
             undertimeMinutes: 0,
             totalLoggedMinutes: 0,
-            workDate: summary.workDate,
-            timeIn: summary.timeIn,
-            timeOut: summary.timeOut,
           };
         }
 
@@ -466,9 +463,10 @@ exports.update = async (req, res) => {
       timeOut = null,
       userId = null,
       id = null,
+      reason = "",
     } = req.body;
 
-    if (!timeIn || !timeOut || !userId || !id) {
+    if (!timeIn || !timeOut || !userId || !id || !reason) {
       return res.status(400).json({ error: "All fields are required!" });
     }
 
@@ -508,11 +506,18 @@ exports.update = async (req, res) => {
       schedule,
     });
 
-    await db.collection("attendance").doc(id).update({
-      timeIn: parsedTimeIn,
-      timeOut: parsedTimeOut,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    await db
+      .collection("attendance")
+      .doc(id)
+      .update({
+        timeIn: parsedTimeIn,
+        timeOut: parsedTimeOut,
+        lastEdit: {
+          reason,
+          by: req.user.uid,
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
     // Sync the reporting record after recalculating attendance metrics.
     await db

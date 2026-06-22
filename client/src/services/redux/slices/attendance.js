@@ -35,7 +35,7 @@ export const PUNCH = createAsyncThunk(`${url}/punch`, (payload, thunkAPI) => {
 });
 export const UPDATE = createAsyncThunk(`${url}/update`, (payload, thunkAPI) => {
   try {
-    return axioKit.update(url, payload, "punch");
+    return axioKit.update(url, payload);
   } catch (error) {
     const message =
       (error.response && error.response.data && error.response.data.message) ||
@@ -239,8 +239,10 @@ export const reduxSlice = createSlice({
         if (!data) return;
 
         const _collections = [...state.collections];
-        const index = _collections.findIndex((item) => item.id === data.id);
-
+        const index = _collections.findIndex(
+          (item) => item.attendanceId === data.id,
+        );
+        console.log("index", index);
         if (index > -1) {
           _collections[index] = { ..._collections[index], ...data };
         }
