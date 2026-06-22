@@ -346,7 +346,7 @@ exports.todaySummary = async (req, res) => {
 
 exports.records = async (req, res) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, search } = req.query;
     const { role } = req.user;
 
     if (role !== "administrator") {

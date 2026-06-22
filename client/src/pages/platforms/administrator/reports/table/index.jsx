@@ -12,7 +12,6 @@ import {
 import { Formatter } from "@/services/utilities";
 import { RECORDS } from "@/services/redux/slices/attendance";
 import { CalendarX } from "lucide-react";
-import { useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 const TableRecords = ({ params, reportType = "Daily" }) => {
@@ -22,14 +21,6 @@ const TableRecords = ({ params, reportType = "Daily" }) => {
     isFetchingList = false,
   } = useSelector(({ attendance }) => attendance);
   const dispatch = useDispatch();
-
-  const requestParams = useMemo(
-    () => ({
-      ...params,
-      limit: pagination.limit,
-    }),
-    [pagination.limit, params],
-  );
 
   const setPage = (page) => {
     if (!params) return;
@@ -59,11 +50,11 @@ const TableRecords = ({ params, reportType = "Daily" }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-          {isFetchingList ? (
-            <TableSkeleton numberOfRows={5} numberOfColumns={7} />
-          ) : collections.length ? (
-            collections.map((report) => (
-                <TableRow key={report.id} className="hover:bg-muted/30">
+            {isFetchingList ? (
+              <TableSkeleton numberOfRows={5} numberOfColumns={7} />
+            ) : collections.length ? (
+              collections.map((report) => (
+                <TableRow key={report.userId} className="hover:bg-muted/30">
                   <TableCell className="font-medium">
                     {Formatter.fullName(report?.user?.name)}
                   </TableCell>

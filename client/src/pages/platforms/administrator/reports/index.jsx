@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -20,6 +20,7 @@ const Reports = () => {
   const { pagination } = useSelector(({ attendance }) => attendance);
   const dispatch = useDispatch();
   const timezone = auth?.timezone || "Asia/Manila";
+  const limitRef = useRef(pagination.limit);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -34,6 +35,10 @@ const Reports = () => {
 
     return () => clearTimeout(timeout);
   }, [search]);
+
+  useEffect(() => {
+    limitRef.current = pagination.limit;
+  }, [pagination.limit]);
 
   const recordParams = useMemo(() => {
     const keyword = debouncedSearch ? { search: debouncedSearch } : {};
@@ -62,10 +67,10 @@ const Reports = () => {
       RECORDS({
         ...recordParams,
         page: 1,
-        limit: pagination.limit,
+        limit: limitRef.current,
       }),
     );
-  }, [dispatch, pagination.limit, recordParams]);
+  }, [dispatch, recordParams]);
 
   return (
     <main className="min-h-[calc(100vh-3.25rem)] p-4 sm:p-6">
@@ -114,16 +119,10 @@ const Reports = () => {
                 </div>
               </div>
               <TabsContent value="daily">
-                <TableRecords
-                  params={recordParams}
-                  reportType="Daily"
-                />
+                <TableRecords params={recordParams} reportType="Daily" />
               </TabsContent>
               <TabsContent value="weekly">
-                <TableRecords
-                  params={recordParams}
-                  reportType="Weekly"
-                />
+                <TableRecords params={recordParams} reportType="Weekly" />
               </TabsContent>
             </Tabs>
           </CardContent>

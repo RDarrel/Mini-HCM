@@ -6,6 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useMemo, useState } from "react";
+
 const MONTHS = [
   "January",
   "February",
@@ -20,6 +21,7 @@ const MONTHS = [
   "November",
   "December",
 ];
+
 const years = ["2026", "2025", "2024"];
 
 const pad = (value) => String(value).padStart(2, "0");
@@ -30,8 +32,10 @@ const getWeeks = (year, month) => {
   const lastDay = new Date(Number(year), monthNumber, 0).getDate();
 
   const weeks = [];
+
   for (let start = 1, index = 1; start <= lastDay; start += 7, index++) {
     const end = Math.min(start + 6, lastDay);
+
     const startDate = `${year}-${pad(monthNumber)}-${pad(start)}`;
     const endDate = `${year}-${pad(monthNumber)}-${pad(end)}`;
 
@@ -51,11 +55,34 @@ const getWeeks = (year, month) => {
   return weeks;
 };
 
+const getCurrentWeekValue = (year, month) => {
+  const currentDay = new Date().getDate();
+  const weeks = getWeeks(year, month);
+
+  const week = weeks.find((item) => {
+    const { startDate, endDate } = JSON.parse(item.value);
+    const start = Number(startDate.split("-")[2]);
+    const end = Number(endDate.split("-")[2]);
+    return currentDay >= start && currentDay <= end;
+  });
+
+  return week?.value || weeks[0]?.value || "";
+};
+
 const Weekly = ({ setWeeklyRange }) => {
-  const [year, setYear] = useState("2026");
-  const [month, setMonth] = useState("June");
+  const today = new Date();
+
+  const defaultYear = String(today.getFullYear());
+  const defaultMonth = MONTHS[today.getMonth()];
+
+  const [year, setYear] = useState(defaultYear);
+  const [month, setMonth] = useState(defaultMonth);
+
   const weeks = useMemo(() => getWeeks(year, month), [year, month]);
-  const [week, setWeek] = useState(() => weeks[0]?.value || "");
+
+  const [week, setWeek] = useState(() =>
+    getCurrentWeekValue(defaultYear, defaultMonth),
+  );
 
   useEffect(() => {
     if (!week) return;
@@ -65,14 +92,16 @@ const Weekly = ({ setWeeklyRange }) => {
 
   const handleYearChange = (value) => {
     setYear(value);
-    const nextWeeks = getWeeks(value, month);
-    setWeek(nextWeeks[0]?.value || "");
+
+    const nextWeek = getCurrentWeekValue(value, month);
+    setWeek(nextWeek);
   };
 
   const handleMonthChange = (value) => {
     setMonth(value);
-    const nextWeeks = getWeeks(year, value);
-    setWeek(nextWeeks[0]?.value || "");
+
+    const nextWeek = getCurrentWeekValue(year, value);
+    setWeek(nextWeek);
   };
 
   const handleWeekChange = (value) => {
@@ -85,6 +114,7 @@ const Weekly = ({ setWeeklyRange }) => {
         <SelectTrigger className="w-full sm:w-28">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
+
         <SelectContent>
           {years.map((item) => (
             <SelectItem key={item} value={item}>
@@ -98,6 +128,7 @@ const Weekly = ({ setWeeklyRange }) => {
         <SelectTrigger className="w-full sm:w-36">
           <SelectValue placeholder="Month" />
         </SelectTrigger>
+
         <SelectContent>
           {MONTHS.map((item) => (
             <SelectItem key={item} value={item}>
@@ -111,6 +142,7 @@ const Weekly = ({ setWeeklyRange }) => {
         <SelectTrigger className="w-full sm:w-48">
           <SelectValue placeholder="Week" />
         </SelectTrigger>
+
         <SelectContent>
           {weeks.map((item) => (
             <SelectItem key={item.value} value={item.value}>
