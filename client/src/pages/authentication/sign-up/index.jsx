@@ -8,6 +8,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/shared/passwordInput";
 import { useDispatch, useSelector } from "react-redux";
 import { REGISTER } from "@/redux/slices/auth";
 import { getTimezone } from "@/utilities";
@@ -100,9 +101,8 @@ export default function LoginForm({ setIsLogin = () => {} }) {
         <div className="flex gap-4">
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               placeholder="Password"
               autoComplete="new-password"
               required
@@ -110,9 +110,8 @@ export default function LoginForm({ setIsLogin = () => {} }) {
           </Field>
           <Field>
             <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-            <Input
+            <PasswordInput
               id="confirmPassword"
-              type="password"
               placeholder="Confirm Password"
               autoComplete="new-password"
               required

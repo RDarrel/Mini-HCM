@@ -7,6 +7,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/shared/passwordInput";
 import { useDispatch, useSelector } from "react-redux";
 import { LOGIN } from "@/redux/slices/auth";
 import { toast } from "sonner";
@@ -23,13 +24,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
     const { email, password } = e.target;
     dispatch(LOGIN({ email: email.value, password: password.value }))
       .unwrap()
-      .then(({ payload }) => {
-        if (payload?.user?.role === 2) {
-          navigate("/cashier");
-        } else {
-          navigate("/platforms/dashboard");
-        }
-      })
+      .then(() => navigate("/platforms/dashboard"))
       .catch((error) => {
         toast.error(error, {
           duration: 1000, // 1 second lang bago mawala
@@ -65,11 +60,10 @@ export default function LoginForm({ setIsLogin = () => {} }) {
               Forgot your password?
             </a>
           </div>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             required
-            autoComplete="new-password"
+            autoComplete="current-password"
           />
         </Field>
         <Field>
