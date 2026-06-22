@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { DateTime } from "luxon";
-import {
-  CalendarDays,
-  Clock,
-  Loader,
-  Lock,
-  Save,
-  UserRound,
-} from "lucide-react";
+import { CalendarDays, Clock, Lock, Save, UserRound } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Formatter, toISODate } from "@/services/utilities";
+import { Formatter } from "@/services/utilities";
 import {
   LockedDate,
   TimeInput,
@@ -31,28 +23,8 @@ import {
 } from "./components";
 import { toast } from "sonner";
 import { UPDATE } from "@/services/redux/slices/attendance";
+import { timeValue, isoDateValue, getNextWorkDate, initialForm } from "./utils";
 import Spinner from "@/components/shared/spinner";
-
-const initialForm = {
-  timeInTime: "",
-  timeOutDate: "",
-  timeOutTime: "",
-  reason: "",
-};
-
-// Convert date based on the employee timezone
-const toDateTime = (value, timezone = "Asia/Manila") => {
-  const date = Formatter.toJSDate(value);
-  return date ? DateTime.fromJSDate(date).setZone(timezone) : null;
-};
-
-const timeValue = (value, timezone) =>
-  toDateTime(value, timezone)?.toFormat("HH:mm") || "";
-
-const isoDateValue = (value, timezone) => {
-  const date = Formatter.toJSDate(value);
-  return date ? toISODate(date, timezone) : "";
-};
 
 const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   const { isSubmitting } = useSelector(({ attendance }) => attendance);
@@ -62,15 +34,8 @@ const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   const timezone = employee?.timezone || "Asia/Manila";
   const workDate = employee?.workDate || "";
 
-  // Time Out can only be the workDate or the next day to support night shifts.
   const nextWorkDate = useMemo(
-    () =>
-      workDate
-        ? toISODate(
-            DateTime.fromISO(workDate).plus({ days: 1 }).toJSDate(),
-            timezone,
-          )
-        : "",
+    () => getNextWorkDate(workDate, timezone),
     [timezone, workDate],
   );
 
