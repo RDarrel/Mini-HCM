@@ -15,6 +15,8 @@ import AppLoader from "./components/shared/appLoader";
 export default function App() {
   const { auth: authUser, isCheckingAuth } = useSelector(({ auth }) => auth);
   const dispatch = useDispatch();
+
+  // Restore user session when authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
