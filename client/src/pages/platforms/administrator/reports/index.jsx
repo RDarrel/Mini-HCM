@@ -76,15 +76,11 @@ const Reports = () => {
     <main className="min-h-[calc(100vh-3.25rem)] p-4 sm:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
         <Card className="border-border/70 shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <CardTitle>Attendance Reports</CardTitle>
-                <CardDescription>
-                  Review attendance summaries by day or week.
-                </CardDescription>
-              </div>
-            </div>
+          <CardHeader>
+            <CardTitle>Attendance Reports</CardTitle>
+            <CardDescription>
+              Review attendance summaries by day or week.
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
             <Tabs
