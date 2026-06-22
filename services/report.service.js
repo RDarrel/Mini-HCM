@@ -8,7 +8,15 @@ const SUMMARY_FIELDS = [
   "undertimeMinutes",
   "totalLoggedMinutes",
 ];
+const chunkArray = (array, size = 30) => {
+  const chunks = [];
 
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+
+  return chunks;
+};
 const aggregateSummaryByUser = (docs) => {
   return Object.values(
     docs.reduce((acc, curr) => {
@@ -34,13 +42,18 @@ const aggregateSummaryByUser = (docs) => {
 const getUserMap = async (userIds) => {
   if (!userIds.length) return new Map();
 
-  const usersSnapshot = await db
-    .collection("users")
-    .where("uid", "in", userIds)
-    .get();
+  // Firestore "in" queries support a maximum of 30 values.
+  // Split userIds into chunks to avoid query limit errors.
+  const chunks = chunkArray(userIds, 30);
 
-  return new Map(
-    usersSnapshot.docs.map((doc) => {
+  const snapshots = await Promise.all(
+    chunks.map((chunk) =>
+      db.collection("users").where("uid", "in", chunk).get(),
+    ),
+  );
+
+  const users = snapshots.flatMap((snapshot) =>
+    snapshot.docs.map((doc) => {
       const user = doc.data();
       const { role, ...rest } = user;
 
@@ -53,6 +66,8 @@ const getUserMap = async (userIds) => {
       ];
     }),
   );
+
+  return new Map(users);
 };
 
 const filterSummaryBySearch = (summaries, keyword) => {
