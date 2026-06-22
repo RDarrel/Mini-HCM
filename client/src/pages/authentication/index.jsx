@@ -48,7 +48,7 @@ const Authentication = () => {
           <img
             src={slide.src}
             alt={slide.title}
-            className="auth-hero-img h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            className="auth-hero-img h-full w-full object-cover brightness-75"
             loading="eager"
           />
 
