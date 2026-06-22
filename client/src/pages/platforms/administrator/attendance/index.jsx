@@ -113,7 +113,7 @@ const Attendance = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="p-0">
+                      <TableCell colSpan={5} className="p-0">
                         <EmptyRecords />
                       </TableCell>
                     </TableRow>

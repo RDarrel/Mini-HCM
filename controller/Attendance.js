@@ -2,15 +2,8 @@ const { db, admin } = require("../config/firebase");
 const { DateTime } = require("luxon");
 const { computeDailySummary, getWorkDate } = require("../utilities/attendance");
 const { getPagination, getPaginationMeta } = require("../utilities/pagination");
-
-const SUMMARY_FIELDS = [
-  "lateMinutes",
-  "overtimeMinutes",
-  "nightDiffMinutes",
-  "regularMinutes",
-  "undertimeMinutes",
-  "totalLoggedMinutes",
-];
+const attendanceService = require("../services/attendance.service");
+const reportService = require("../services/report.service");
 
 exports.myHistory = async (req, res) => {
   try {
@@ -50,18 +43,6 @@ exports.myHistory = async (req, res) => {
   }
 };
 
-// Get a daily summary record by ID.
-const getSummaryById = async (attendanceId) => {
-  const doc = await db.collection("dailySummary").doc(attendanceId).get();
-
-  return doc.exists
-    ? {
-        id: doc.id,
-        ...doc.data(),
-      }
-    : null;
-};
-
 // Returns today's attendance record along with its computed summary if available.
 exports.todayRecord = async (req, res) => {
   try {
@@ -69,7 +50,6 @@ exports.todayRecord = async (req, res) => {
     const now = new Date();
 
     const workDate = getWorkDate(now, schedule, timezone);
-
     const snapshot = await db
       .collection("attendance")
       .where("userId", "==", userId)
@@ -86,7 +66,7 @@ exports.todayRecord = async (req, res) => {
       });
     }
 
-    const summary = await getSummaryById(doc.id);
+    const summary = await attendanceService.getSummaryById(doc.id);
 
     res.json({
       message: "Today record fetched successfully",
@@ -103,140 +83,11 @@ exports.todayRecord = async (req, res) => {
   }
 };
 
-// Validates punch in/out requests and enforces attendance rules.
-const punchValidation = async ({ userId, punchType, schedule, timezone }) => {
-  if (!["in", "out"].includes(punchType)) {
-    throw new Error("Invalid punch type");
-  }
-  const now = new Date();
-  const workDate = getWorkDate(now, schedule, timezone);
-
-  // Check if the employee has an active attendance record.
-  const openAttSnapshot = await db
-    .collection("attendance")
-    .where("userId", "==", userId)
-    .where("timeOut", "==", null)
-    .limit(1)
-    .get();
-
-  const attendanceDoc = openAttSnapshot.empty ? null : openAttSnapshot.docs[0];
-  if (punchType === "in") {
-    if (!openAttSnapshot.empty) {
-      throw new Error("You are already punched in. Please punch out first.");
-    }
-
-    // Prevent creating more than one attendance record for the same work day.
-    const sameWorkDaySnapshot = await db
-      .collection("attendance")
-      .where("userId", "==", userId)
-      .where("workDate", "==", workDate)
-      .limit(1)
-      .get();
-
-    if (!sameWorkDaySnapshot.empty) {
-      throw new Error("Your shift is already completed.");
-    }
-  }
-
-  if (openAttSnapshot.empty && punchType === "out") {
-    throw new Error("Please punch in first before punching out.");
-  }
-
-  return { workDate, attendanceDoc };
-};
-
-const punchIn = async ({ userId, workDate, timezone }) => {
-  const docRef = await db.collection("attendance").add({
-    userId,
-    workDate,
-    timeIn: admin.firestore.FieldValue.serverTimestamp(),
-    timeOut: null,
-    timezone,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  const doc = await docRef.get();
-  const attendance = doc.data();
-
-  // Create an initial summary record so attendance history can
-  // immediately display the ongoing shift after Punch In.
-  await db.collection("dailySummary").doc(doc.id).set({
-    attendanceId: doc.id,
-    userId,
-    workDate,
-    timeIn: attendance.timeIn,
-    timeOut: null,
-    regularMinutes: 0,
-    overtimeMinutes: 0,
-    nightDiffMinutes: 0,
-    lateMinutes: 0,
-    undertimeMinutes: 0,
-    totalLoggedMinutes: 0,
-    status: "in_progress",
-    timezone,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  return {
-    id: doc.id,
-    ...attendance,
-    status: "in_progress",
-  };
-};
-
-const punchOut = async ({ schedule, attendanceDoc, timezone }) => {
-  if (!attendanceDoc) {
-    throw new Error("Attendance record not found.");
-  }
-
-  await attendanceDoc.ref.update({
-    timeOut: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  const updatedDoc = await attendanceDoc.ref.get();
-  const attendance = updatedDoc.data();
-
-  const summary = computeDailySummary({
-    timeIn: attendance.timeIn.toDate(),
-    timeOut: attendance.timeOut.toDate(),
-    schedule,
-    timezone,
-  });
-
-  // Finalize the reporting record used by dashboards,
-  // attendance history, and admin reports.
-  await db
-    .collection("dailySummary")
-    .doc(attendanceDoc.id)
-    .set(
-      {
-        attendanceId: attendanceDoc.id,
-        userId: attendance.userId,
-        workDate: attendance.workDate,
-        timeIn: attendance.timeIn,
-        timeOut: attendance.timeOut,
-        ...summary,
-        timezone: attendance.timezone,
-        status: "completed",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    );
-
-  return {
-    id: attendanceDoc.id,
-    ...attendance,
-    ...summary,
-    status: "completed",
-  };
-};
-
 exports.punch = async (req, res) => {
   try {
     const { punchType } = req.body;
     const { schedule, uid: userId, timezone = "Asia/Manila" } = req.user;
+
     if (!punchType) {
       return res.status(400).json({
         error: "Punch type is required!",
@@ -249,28 +100,16 @@ exports.punch = async (req, res) => {
       });
     }
 
-    const { workDate, attendanceDoc } = await punchValidation({
+    const data = await attendanceService.punch({
       userId,
       punchType,
       schedule,
       timezone,
     });
 
-    const data =
-      punchType === "in"
-        ? await punchIn({ userId, workDate, timezone })
-        : await punchOut({
-            schedule,
-            attendanceDoc,
-            timezone,
-          });
-
     res.json({
       message: "Attendance Punch Successfully",
-      data: {
-        ...data,
-        punchType,
-      },
+      data,
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -333,64 +172,6 @@ exports.todaySummary = async (req, res) => {
   }
 };
 
-const aggregateSummaryByUser = (docs) => {
-  return Object.values(
-    docs.reduce((acc, curr) => {
-      const summary = curr.data();
-      const key = summary.userId;
-
-      if (!acc[key]) {
-        acc[key] = {
-          ...summary,
-          ...Object.fromEntries(SUMMARY_FIELDS.map((field) => [field, 0])),
-        };
-      }
-
-      SUMMARY_FIELDS.forEach((field) => {
-        acc[key][field] += summary[field] || 0;
-      });
-
-      return acc;
-    }, {}),
-  );
-};
-
-const getUserMap = async (userIds) => {
-  if (!userIds.length) return new Map();
-
-  const usersSnapshot = await db
-    .collection("users")
-    .where("uid", "in", userIds)
-    .get();
-
-  return new Map(
-    usersSnapshot.docs.map((doc) => {
-      const user = doc.data();
-      const { role, ...rest } = user;
-
-      return [
-        user.uid,
-        {
-          uid: user.uid,
-          ...rest,
-        },
-      ];
-    }),
-  );
-};
-
-const filterSummaryBySearch = (summaries, keyword) => {
-  if (!keyword) return summaries;
-
-  return summaries.filter(({ user }) => {
-    const fname = user?.name?.fname?.toLowerCase() || "";
-    const lname = user?.name?.lname?.toLowerCase() || "";
-    const fullName = `${fname} ${lname}`;
-
-    return fullName.includes(keyword);
-  });
-};
-
 exports.records = async (req, res) => {
   try {
     const { from, to, search = "" } = req.query;
@@ -409,7 +190,7 @@ exports.records = async (req, res) => {
       .get();
 
     // Aggregate attendance metrics per employee
-    const computedDailySummary = aggregateSummaryByUser(
+    const computedDailySummary = reportService.aggregateSummaryByUser(
       dailySummarySnapshot.docs,
     );
 
@@ -418,7 +199,7 @@ exports.records = async (req, res) => {
     ];
 
     // Load employee information and create a lookup map
-    const userMap = await getUserMap(userIds);
+    const userMap = await reportService.getUserMap(userIds);
 
     const keyword = search.toLowerCase().trim();
 
@@ -429,7 +210,10 @@ exports.records = async (req, res) => {
     }));
 
     // Apply employee name search filter
-    const filteredSummary = filterSummaryBySearch(summariesWithUser, keyword);
+    const filteredSummary = reportService.filterSummaryBySearch(
+      summariesWithUser,
+      keyword,
+    );
 
     const totalRecords = filteredSummary.length;
     const records = filteredSummary.slice(offset, offset + limit);
@@ -519,6 +303,7 @@ exports.update = async (req, res) => {
       .update({
         timeIn: parsedTimeIn,
         timeOut: parsedTimeOut,
+        status: "completed",
         ...summary,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
