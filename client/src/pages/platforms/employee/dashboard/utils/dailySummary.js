@@ -8,7 +8,6 @@ const toDateTime = (timestamp, timezone) =>
   DateTime.fromJSDate(toJSDate(timestamp)).setZone(timezone);
 
 const getShiftDateTime = (baseDateTime, timeString) => {
-  if (!isValidDateTime(baseDateTime) || !timeString) return null;
   const [hour, minute] = timeString.split(":").map(Number);
 
   return baseDateTime.set({

@@ -1,34 +1,21 @@
-import { DateTime } from "luxon";
 import { Clock3, Timer, Activity, CalendarClock, Moon } from "lucide-react";
 import { Formatter } from "@/services/utilities";
 import dailySummary from "./dailySummary";
-const DEFAULT_TIMEZONE = "Asia/Manila";
 
-const formatScheduleTime = (time = "00:00", timezone = DEFAULT_TIMEZONE) => {
-  const [hours = "0", minutes = "0"] = time.split(":");
-
-  return DateTime.fromObject(
-    {
-      hour: Number(hours),
-      minute: Number(minutes),
-    },
-    { zone: timezone },
-  ).toFormat("h:mm a");
-};
 const utils = {
   compute: {
     dailySummary,
   },
 
   statusLabel: (attendance = null) => {
-    if (!attendance) return "Ready to Punch In";
+    if (!attendance?.timeIn) return "Ready to Punch In";
     if (attendance.timeIn && !attendance.timeOut) return "Ready to Punch Out";
 
     return "Shift Completed";
   },
-  shiftLabel: (schedule = null, timezone = DEFAULT_TIMEZONE) => {
+  shiftLabel: (schedule = null, timezone = "Asia/Manila") => {
     if (!schedule) return "No Shift Scheduled";
-    return `${formatScheduleTime(schedule.start, timezone)} - ${formatScheduleTime(schedule.end, timezone)}`;
+    return Formatter.scheduleTime(schedule, timezone);
   },
 
   canPunchOut: (attendance = null) => {
