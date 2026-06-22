@@ -4,12 +4,6 @@
 
 https://your-app.web.app
 
-## Repository
-
-https://github.com/yourusername/mini-hcm
-
-## Features
-
 ## Features
 
 - User Registration & Authentication
@@ -45,14 +39,14 @@ Password: Password@54321
 
 ## Installation
 
-### Backend
+### Backend (Root Directory)
 
 ```bash
 npm install
 npm run start
 ```
 
-### Client
+### Frontend (Client)
 
 ```bash
 cd client
