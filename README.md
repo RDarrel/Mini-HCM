@@ -47,8 +47,10 @@ Password: Password@54321
 
 ### Backend
 
+```bash
 npm install
 npm run start
+```
 
 ### Client
 
