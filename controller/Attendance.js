@@ -346,7 +346,7 @@ exports.todaySummary = async (req, res) => {
 
 exports.records = async (req, res) => {
   try {
-    const { from, to, search } = req.query;
+    const { from, to, search = "" } = req.query;
     const { role } = req.user;
 
     if (role !== "administrator") {
@@ -359,13 +359,12 @@ exports.records = async (req, res) => {
 
     const { page, limit, offset } = getPagination(req.query);
 
-    const dailySummaryQuery = db
+    const dailySummarySnapshot = await db
       .collection("dailySummary")
       .where("workDate", ">=", from)
       .where("workDate", "<=", to)
-      .orderBy("workDate", "desc");
-
-    const dailySummarySnapshot = await dailySummaryQuery.get();
+      .orderBy("workDate", "desc")
+      .get();
 
     const fields = [
       "lateMinutes",
@@ -401,11 +400,9 @@ exports.records = async (req, res) => {
       }, {}),
     );
 
-    const totalRecords = computedDailySummary.length;
-
-    const paginatedSummary = computedDailySummary.slice(offset, offset + limit);
-
-    const userIds = [...new Set(paginatedSummary.map((item) => item.userId))];
+    const userIds = [
+      ...new Set(computedDailySummary.map((item) => item.userId)),
+    ];
 
     let userMap = new Map();
 
@@ -431,10 +428,26 @@ exports.records = async (req, res) => {
       );
     }
 
-    const records = paginatedSummary.map((summary) => ({
-      ...summary,
-      user: userMap.get(summary.userId) || null,
-    }));
+    const keyword = search.toLowerCase().trim();
+
+    const filteredSummary = computedDailySummary
+      .map((summary) => ({
+        ...summary,
+        user: userMap.get(summary.userId) || null,
+      }))
+      .filter(({ user }) => {
+        if (!keyword) return true;
+
+        const fname = user?.name?.fname?.toLowerCase() || "";
+        const lname = user?.name?.lname?.toLowerCase() || "";
+        const fullName = `${fname} ${lname}`;
+
+        return fullName.includes(keyword);
+      });
+
+    const totalRecords = filteredSummary.length;
+
+    const records = filteredSummary.slice(offset, offset + limit);
 
     res.json({
       message: "Records fetched successfully",
