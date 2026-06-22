@@ -5,14 +5,19 @@ const router = require("express").Router(),
     todayRecord,
     todaySummary,
     records,
+    update,
   } = require("../controller/Attendance"),
-  verifyToken = require("../middleware/auth");
+  verifyToken = require("../middleware/auth"),
+  verifyAdmin = require("../middleware/verifyAdmin");
 
 router
+  //EMPLOYEE
   .get("/", verifyToken, myHistory)
   .get("/today", verifyToken, todayRecord)
-  .get("/today/summary", verifyToken, todaySummary)
-  .get("/records", verifyToken, records)
-  .post("/punch", verifyToken, punch);
+  .post("/punch", verifyToken, punch)
+  //ADMIN
+  .get("/today/summary", verifyToken, verifyAdmin, todaySummary)
+  .get("/records", verifyToken, verifyAdmin, records)
+  .put("/update", verifyToken, verifyAdmin, update);
 
 module.exports = router;

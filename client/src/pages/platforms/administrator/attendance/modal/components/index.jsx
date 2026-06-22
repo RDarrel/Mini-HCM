@@ -6,10 +6,18 @@ import { CalendarDays } from "lucide-react";
 import { Formatter } from "@/services/utilities";
 import { cn } from "@/lib/utils";
 
-const TimeInput = ({ id, value, onChange }) => (
+const TimeInput = ({ id, max, min, value, onChange }) => (
   <div className="grid gap-1.5">
     <Label htmlFor={id}>Time</Label>
-    <Input id={id} type="time" value={value} onChange={onChange} required />
+    <Input
+      id={id}
+      type="time"
+      max={max}
+      min={min}
+      value={value}
+      onChange={onChange}
+      required
+    />
   </div>
 );
 
@@ -76,4 +84,11 @@ const TimeOutDateButton = ({
   </Button>
 );
 
-export { LockedDate, TimeInput, TimeCard, InfoPill, IconBox, TimeOutDateButton };
+export {
+  LockedDate,
+  TimeInput,
+  TimeCard,
+  InfoPill,
+  IconBox,
+  TimeOutDateButton,
+};

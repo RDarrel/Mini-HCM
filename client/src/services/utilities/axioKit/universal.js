@@ -5,7 +5,6 @@ import { getAuth } from "firebase/auth";
  * A universal GET request.
  *
  * @param {string} entity - Base route of the API.
- * @param {string} token - Authorization Token.
  * @param {string|object} params - Headers that will be passed to the api.
  * @returns {{ success: boolean, payload: Array<any>|object }} - The result object containing success and payload.
  */

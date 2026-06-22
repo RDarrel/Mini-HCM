@@ -33,7 +33,18 @@ export const PUNCH = createAsyncThunk(`${url}/punch`, (payload, thunkAPI) => {
     return thunkAPI.rejectWithValue(message);
   }
 });
+export const UPDATE = createAsyncThunk(`${url}/update`, (payload, thunkAPI) => {
+  try {
+    return axioKit.update(url, payload, "punch");
+  } catch (error) {
+    const message =
+      (error.response && error.response.data && error.response.data.message) ||
+      error.message ||
+      error.toString();
 
+    return thunkAPI.rejectWithValue(message);
+  }
+});
 export const BROWSE = createAsyncThunk(`${url}/browse`, (params, thunkAPI) => {
   try {
     return axioKit.universal(url, params);
@@ -214,6 +225,31 @@ export const reduxSlice = createSlice({
         state.isSubmitting = false;
       })
       .addCase(PUNCH.rejected, (state, action) => {
+        const { error } = action;
+        state.message = error.message;
+        state.isSubmitting = false;
+      })
+      .addCase(UPDATE.pending, (state) => {
+        state.isSubmitting = true;
+        state.isSuccess = false;
+        state.message = "";
+      })
+      .addCase(UPDATE.fulfilled, (state, action) => {
+        const { data = null } = action.payload;
+        if (!data) return;
+
+        const _collections = [...state.collections];
+        const index = _collections.findIndex((item) => item.id === data.id);
+
+        if (index > -1) {
+          _collections[index] = { ..._collections[index], ...data };
+        }
+
+        state.collections = _collections;
+        state.isSuccess = true;
+        state.isSubmitting = false;
+      })
+      .addCase(UPDATE.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
         state.isSubmitting = false;

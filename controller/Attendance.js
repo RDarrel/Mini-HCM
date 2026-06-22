@@ -291,10 +291,6 @@ exports.todaySummary = async (req, res) => {
   try {
     const { timezone, role } = req.user;
 
-    if (role !== "administrator") {
-      return res.status(403).json({ error: "You are not authorized" });
-    }
-
     const workDate = DateTime.now()
       .setZone(timezone || "Asia/Manila")
       .toISODate();
@@ -348,10 +344,6 @@ exports.records = async (req, res) => {
   try {
     const { from, to, search = "" } = req.query;
     const { role } = req.user;
-
-    if (role !== "administrator") {
-      return res.status(403).json({ error: "You are not authorized" });
-    }
 
     if (!from || !to) {
       return res.status(400).json({ error: "From and to date are required!" });
@@ -459,6 +451,86 @@ exports.records = async (req, res) => {
         limit,
         totalRecords,
       }),
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+exports.update = async (req, res) => {
+  try {
+    const {
+      timeIn = null,
+      timeOut = null,
+      userId = null,
+      id = null,
+    } = req.body;
+
+    if (!timeIn || !timeOut || !userId || !id) {
+      return res.status(400).json({ error: "All fields are required!" });
+    }
+
+    const userSnapshot = await db.collection("users").doc(userId).get();
+
+    if (!userSnapshot.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { timezone = "Asia/Manila", schedule } = userSnapshot.data();
+
+    if (!schedule?.start || !schedule?.end) {
+      return res.status(400).json({
+        error: "Employee schedule is required",
+      });
+    }
+
+    const parsedTimeIn = DateTime.fromISO(timeIn, {
+      zone: timezone,
+    }).toJSDate();
+
+    const parsedTimeOut = DateTime.fromISO(timeOut, {
+      zone: timezone,
+    }).toJSDate();
+
+    if (parsedTimeOut <= parsedTimeIn) {
+      return res.status(400).json({
+        error: "Time Out must be after Time In",
+      });
+    }
+
+    // Recompute attendance summary based on the updated time entries.
+    const summary = computeDailySummary({
+      timeIn: parsedTimeIn,
+      timeOut: parsedTimeOut,
+      timezone,
+      schedule,
+    });
+
+    await db.collection("attendance").doc(id).update({
+      timeIn: parsedTimeIn,
+      timeOut: parsedTimeOut,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Sync the reporting record after recalculating attendance metrics.
+    await db
+      .collection("dailySummary")
+      .doc(id)
+      .update({
+        timeIn: parsedTimeIn,
+        timeOut: parsedTimeOut,
+        ...summary,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    res.json({
+      message: "Attendance updated successfully",
+      data: {
+        id,
+        timeIn: parsedTimeIn,
+        timeOut: parsedTimeOut,
+        ...summary,
+      },
     });
   } catch (error) {
     res.status(400).json({ error: error.message });

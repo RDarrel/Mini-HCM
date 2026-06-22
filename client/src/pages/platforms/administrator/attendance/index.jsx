@@ -23,7 +23,7 @@ import CustomDatePicker from "@/components/shared/datepicker";
 import DebouncedInput from "@/components/shared/debouncedInput";
 import { toISODate } from "@/services/utilities";
 import Employee from "./employee";
-import CustomModal from "./modal";
+import EmployeeModal from "./modal";
 
 const Attendance = () => {
   const { auth } = useSelector(({ auth }) => auth),
@@ -130,7 +130,7 @@ const Attendance = () => {
           </CardContent>
         </Card>
       </div>
-      <CustomModal
+      <EmployeeModal
         isOpen={openModal}
         setIsOpen={setOpenModal}
         selected={selected}

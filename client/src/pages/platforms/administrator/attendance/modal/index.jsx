@@ -9,7 +9,6 @@ import {
   UserRound,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +29,9 @@ import {
   IconBox,
   TimeOutDateButton,
 } from "./components";
+import { toast } from "sonner";
+import { UPDATE } from "@/services/redux/slices/attendance";
+
 const initialForm = {
   timeInTime: "",
   timeOutDate: "",
@@ -37,6 +39,7 @@ const initialForm = {
   reason: "",
 };
 
+// Convert date based on the employee timezone
 const toDateTime = (value, timezone = "Asia/Manila") => {
   const date = Formatter.toJSDate(value);
   return date ? DateTime.fromJSDate(date).setZone(timezone) : null;
@@ -50,12 +53,14 @@ const isoDateValue = (value, timezone) => {
   return date ? toISODate(date, timezone) : "";
 };
 
-const AttendanceModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
+const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   const { isSubmitting } = useSelector(({ attendance }) => attendance);
   const [form, setForm] = useState(initialForm);
 
   const timezone = employee?.timezone || "Asia/Manila";
   const workDate = employee?.workDate || "";
+
+  // Time Out can only be the workDate or the next day to support night shifts.
   const nextWorkDate = useMemo(
     () =>
       workDate
@@ -66,11 +71,20 @@ const AttendanceModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
         : "",
     [timezone, workDate],
   );
+
+  // Limit Time Out date choices to workDate and nextWorkDate only.
   const timeOutDates = useMemo(
     () => [workDate, nextWorkDate].filter(Boolean),
     [nextWorkDate, workDate],
   );
 
+  const schedule = employee?.user?.schedule || {};
+  const scheduleTimeIn = schedule?.timeIn || schedule?.start || undefined;
+  const timeInMaxTime = schedule?.timeOut || schedule?.end || undefined;
+  const timeOutMinTime =
+    form.timeOutDate === workDate ? scheduleTimeIn : undefined;
+
+  // Prefill form from the selected attendance record when modal opens.
   useEffect(() => {
     if (!isOpen) return setForm(initialForm);
     if (!workDate) return;
@@ -101,24 +115,42 @@ const AttendanceModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    if (!form.timeInTime || !form.timeOutDate || !form.timeOutTime) {
+      return toast.warning("Time In and Time Out are required");
+    }
+
+    if (!form.reason.trim()) {
+      return toast.warning("Reason is required");
+    }
+
     const timeIn = new Date(`${workDate}T${form.timeInTime}:00`);
     const timeOut = new Date(`${form.timeOutDate}T${form.timeOutTime}:00`);
-    if (timeOut <= timeIn) return alert("Time Out must be after Time In");
+
+    if (timeOutMinTime && form.timeOutTime === timeOutMinTime) {
+      return toast.warning(
+        "Time Out must not be equal to the schedule time in",
+      );
+    }
+
+    if (timeOut <= timeIn) {
+      return toast.warning("Time Out must be after Time In");
+    }
 
     const payload = {
-      attendanceId: employee.attendanceId || employee.id,
-      workDate,
-      timeInDate: workDate,
-      timeInTime: form.timeInTime,
-      timeOutDate: form.timeOutDate,
-      timeOutTime: form.timeOutTime,
+      id: employee.attendanceId || employee.id,
       timeIn: `${workDate}T${form.timeInTime}:00`,
       timeOut: `${form.timeOutDate}T${form.timeOutTime}:00`,
       reason: form.reason.trim(),
+      timezone,
     };
 
-    console.log(payload);
-    // dispatch(UPDATE_ATTENDANCE(payload));
+    dispatch(UPDATE(payload))
+      .unwrap()
+      .then(() => {
+        closeModal();
+        toast.success("Successfully updated attendance");
+      })
+      .catch((error) => toast.error(error.message || error.toString()));
   };
 
   return (
@@ -174,6 +206,7 @@ const AttendanceModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
                 <LockedDate value={Formatter.date(workDate, false, timezone)} />
                 <TimeInput
                   id="timeInTime"
+                  max={timeInMaxTime}
                   value={form.timeInTime}
                   onChange={onChange("timeInTime")}
                 />
@@ -197,6 +230,7 @@ const AttendanceModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
                 </div>
                 <TimeInput
                   id="timeOutTime"
+                  min={timeOutMinTime}
                   value={form.timeOutTime}
                   onChange={onChange("timeOutTime")}
                 />
@@ -232,4 +266,4 @@ const AttendanceModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   );
 };
 
-export default AttendanceModal;
+export default EmployeeModal;
