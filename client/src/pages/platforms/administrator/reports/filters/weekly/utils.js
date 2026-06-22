@@ -2,7 +2,7 @@ import { MONTHS } from "@/constants";
 
 const pad = (value) => String(value).padStart(2, "0");
 
-const getWeeks = (year, month) => {
+export const getWeeks = (year, month) => {
   const monthIndex = MONTHS.indexOf(month);
   const monthNumber = monthIndex + 1;
   const lastDay = new Date(Number(year), monthNumber, 0).getDate();
@@ -31,7 +31,7 @@ const getWeeks = (year, month) => {
   return weeks;
 };
 
-const getCurrentWeekValue = (year, month) => {
+export const getCurrentWeekValue = (year, month) => {
   const currentDay = new Date().getDate();
   const weeks = getWeeks(year, month);
 
@@ -44,10 +44,3 @@ const getCurrentWeekValue = (year, month) => {
 
   return week?.value || weeks[0]?.value || "";
 };
-
-const utils = {
-  getCurrentWeekValue,
-  getWeeks,
-};
-
-export default utils;
