@@ -24,8 +24,9 @@ const Dashboard = () => {
   const timezone = auth?.timezone || DEFAULT_TIMEZONE;
 
   useEffect(() => {
+    //Render on mount
     dispatch(BROWSE({ page: pagination.page, limit: pagination.limit }));
-  }, [dispatch, pagination.page, pagination.limit]);
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(GET_TODAY_RECORD());
