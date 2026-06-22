@@ -10,8 +10,8 @@ const access = [
     component: Dashboard,
   },
   {
-    name: "Attendance Records",
-    path: "/attendance-records",
+    name: "Attendance Logs",
+    path: "/attendance-logs",
     icon: CalendarCheck2,
     component: AttendanceRecords,
   },

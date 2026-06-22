@@ -19,7 +19,7 @@ import { Outlet, useLocation } from "react-router-dom";
 export default function Platforms() {
   const { auth } = useSelector(({ auth }) => auth);
   const location = useLocation();
-  const pathSegments = location.pathname.split("/").filter(Boolean); // ["platforms", "students", "list"]
+  const pathSegments = location.pathname.split("/").filter(Boolean);
   const lastSegment = pathSegments[pathSegments.length - 1]; //
 
   return (
@@ -43,7 +43,6 @@ export default function Platforms() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          {/* <BellRing className="mr-12 text-[#FF4F00]" /> */}
         </header>
         <div className="flex flex-1 flex-col  ">
           <Outlet />
