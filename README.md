@@ -1,5 +1,7 @@
 # Mini HCM
 
+A lightweight Human Capital Management (HCM) Time Tracking System built with React.js, Node.js, Express, Firebase Authentication, and Firestore.
+
 ## Live Demo
 
 https://your-app.web.app
@@ -22,20 +24,24 @@ https://your-app.web.app
 
 ### Administrator
 
-Email: administrator@gmail.com
+Email: [administrator@gmail.com](mailto:administrator@gmail.com)
 Password: Password@54321
 
 ### Employee
 
-Email: employee@gmail.com
+Email: [employee@gmail.com](mailto:employee@gmail.com)
 Password: Password@54321
 
 ## Tech Stack
 
 - React.js
-- Node.js + Express
+- Node.js
+- Express.js
 - Firebase Authentication
-- Firestore
+- Firestore Database
+- Redux Toolkit
+- Tailwind CSS
+- ShadCN UI
 
 ## Installation
 
@@ -43,7 +49,7 @@ Password: Password@54321
 
 ```bash
 npm install
-npm run start
+npm start
 ```
 
 ### Frontend (Client)
@@ -53,3 +59,8 @@ cd client
 npm install
 npm run dev
 ```
+
+## Notes
+
+- Firebase service account credentials are not included in this repository for security reasons.
+- The application can be accessed and tested using the Live Demo URL above.
