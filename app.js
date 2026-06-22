@@ -35,7 +35,7 @@ app.use(express.json({ limit: "50mb" }));
 // Routes
 require("./routes")(app);
 
-// used when deployed, make sure it is below routes.
+// Serve React build files and support client-side routes
 app.use(express.static(path.join(__dirname, "./view")));
 app.get("/*splat", (req, res) =>
   res.sendFile(path.resolve(__dirname, "./", "view", "index.html")),
