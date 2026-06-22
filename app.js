@@ -40,10 +40,10 @@ app.use(express.json({ limit: "50mb" }));
 require("./routes")(app);
 
 // used when deployed, make sure it is below routes.
-// app.use(express.static(path.join(__dirname, "./view")));
-// app.get("*", (req, res) =>
-//   res.sendFile(path.resolve(__dirname, "./", "view", "index.html")),
-// );
+app.use(express.static(path.join(__dirname, "./view")));
+app.get("/*splat", (req, res) =>
+  res.sendFile(path.resolve(__dirname, "./", "view", "index.html")),
+);
 
 const server = http.createServer(app);
 
