@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-
+import { Navigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect } from "react";
@@ -30,7 +30,16 @@ export default function App() {
   if (isCheckingAuth) return <AppLoader />;
   return (
     <Routes>
-      <Route path="/" element={<Authentication />} />
+      <Route
+        path="/"
+        element={
+          authUser?.uid ? (
+            <Navigate to="/platforms/dashboard" replace />
+          ) : (
+            <Authentication />
+          )
+        }
+      />
       {/* <Route path="/authentication/:action" element={<Authentication />} /> */}
       <Route path="/platforms" element={<Platforms />}>
         {RouteConfig(authUser?.role)}

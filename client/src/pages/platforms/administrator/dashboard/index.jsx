@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { toISODate } from "@/utilities";
 import { useEffect, useMemo } from "react";
-import { RECORDS, TODAY_SUMMARY } from "@/redux/slices/attendance";
+import { RECORDS, TODAY_SUMMARY, RESET } from "@/redux/slices/attendance";
 import buildSummaryItems from "./buildSummary";
 import KPIs from "./Kpis";
 import EmployeeRecords from "./records";
@@ -13,9 +13,7 @@ const Dashboard = () => {
   );
   const dispatch = useDispatch();
 
-  const date = new Date();
-  // date.setDate(date.getDate() - 1);
-  const from = toISODate(date, auth?.timezone);
+  const from = toISODate(new Date(), auth?.timezone);
   const to = toISODate(new Date(), auth?.timezone);
 
   useEffect(() => {
@@ -27,6 +25,7 @@ const Dashboard = () => {
         limit: pagination.limit,
       }),
     );
+    return () => dispatch(RESET());
   }, [dispatch, auth?.timezone]);
 
   useEffect(() => {

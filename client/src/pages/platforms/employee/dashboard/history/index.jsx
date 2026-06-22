@@ -21,7 +21,7 @@ const AttHistory = () => {
   const { auth } = useSelector(({ auth }) => auth);
   const {
     collections = [],
-    isFetchingItem: isLoading,
+    isFetchingList: isLoading,
     pagination,
   } = useSelector(({ attendance }) => attendance);
   const { timezone = "Asia/Manila" } = auth;

@@ -16,14 +16,14 @@ import {
 } from "@/components/ui/card";
 import { useSelector, useDispatch } from "react-redux";
 import { TableSkeleton } from "@/components/shared/skeleton";
-import { RECORDS } from "@/redux/slices/attendance";
-import Pagination from "@/components/shared/pagination";
+import { RECORDS, RESET } from "@/redux/slices/attendance";
 import { CalendarX } from "lucide-react";
+import { toISODate } from "@/utilities";
 import CustomDatePicker from "@/components/shared/datepicker";
 import DebouncedInput from "@/components/shared/debouncedInput";
-import { toISODate } from "@/utilities";
 import Employee from "./employee";
 import EmployeeModal from "./modal";
+import Pagination from "@/components/shared/pagination";
 
 const Attendance = () => {
   const { auth } = useSelector(({ auth }) => auth),
@@ -59,6 +59,8 @@ const Attendance = () => {
         limit: limitRef.current,
       }),
     );
+
+    return () => dispatch(RESET());
   }, [dispatch, recordParams]);
 
   const toggleModal = () => setOpenModal(!openModal);

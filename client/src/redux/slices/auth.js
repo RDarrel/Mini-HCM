@@ -7,9 +7,7 @@ import {
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { auth, db } from "../../config/firebase"; // ayusin path
 import { Formatter } from "../../utilities";
-const name = "auth",
-  maxPage = Number(localStorage.getItem("maxPage")) || 5,
-  token = localStorage.getItem("token") || "";
+const name = "auth";
 
 const initialState = {
   auth: {},
@@ -17,8 +15,6 @@ const initialState = {
   searchFound: "",
   information: {},
   route: "",
-  token,
-  maxPage,
   isSuccess: false,
   isLoading: false,
   isCheckingAuth: true,
@@ -164,10 +160,6 @@ export const reduxSlice = createSlice({
   name,
   initialState,
   reducers: {
-    MAXPAGE: (state, data) => {
-      localStorage.setItem("maxPage", data.payload);
-      state.maxPage = data.payload;
-    },
     SETROUTE: (state, data) => {
       state.route = data.payload;
     },
@@ -242,6 +234,6 @@ export const reduxSlice = createSlice({
   },
 });
 
-export const { RESET, MAXPAGE } = reduxSlice.actions;
+export const { RESET } = reduxSlice.actions;
 
 export default reduxSlice.reducer;

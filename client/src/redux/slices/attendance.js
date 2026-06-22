@@ -120,17 +120,15 @@ export const reduxSlice = createSlice({
   name: url,
   initialState,
   reducers: {
-    MAXPAGE: (state, data) => {
-      localStorage.setItem("maxPage", data.payload);
-      state.maxPage = data.payload;
-    },
     SETROUTE: (state, data) => {
       state.route = data.payload;
     },
 
     RESET: (state) => {
       state.isSuccess = false;
-      state.auth = {};
+      state.isSubmitting = false;
+      state.isFetchingItem = false;
+      state.isFetchingList = false;
       state.message = "";
     },
   },
@@ -264,6 +262,6 @@ export const reduxSlice = createSlice({
   },
 });
 
-export const { RESET, MAXPAGE } = reduxSlice.actions;
+export const { RESET } = reduxSlice.actions;
 
 export default reduxSlice.reducer;

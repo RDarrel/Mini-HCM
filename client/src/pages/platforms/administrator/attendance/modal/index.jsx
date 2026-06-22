@@ -125,7 +125,7 @@ const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
       open={isOpen}
       onOpenChange={(open) => (open ? setIsOpen(open) : closeModal())}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto p-0 sm:max-w-2xl">
+      <DialogContent className=" p-0 sm:max-w-2xl">
         <DialogHeader className="border-b px-5 py-4">
           <div className="flex items-center gap-3">
             <IconBox icon={Clock} />
