@@ -71,12 +71,17 @@ const EmployeeRecords = ({ from, to }) => {
                         {Formatter.fullName(employee?.user?.name)}
                       </div>
                     </TableCell>
-                    <TableCell>{Formatter.time(employee.timeIn)}</TableCell>
+                    <TableCell>
+                      {Formatter.time(employee?.timeIn, employee?.timezone)}
+                    </TableCell>
                     <TableCell className="tabular-nums">
-                      {Formatter.time(employee.timeOut)}
+                      {Formatter.time(employee?.timeOut, employee?.timezone)}
                     </TableCell>
                     <TableCell className="font-medium tabular-nums">
-                      {Formatter.duration(employee.totalLoggedMinutes)}
+                      {Formatter.duration(
+                        employee?.totalLoggedMinutes,
+                        employee?.timezone,
+                      )}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={employee.status} />
