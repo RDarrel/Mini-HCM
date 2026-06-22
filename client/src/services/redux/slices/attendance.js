@@ -45,18 +45,23 @@ export const UPDATE = createAsyncThunk(`${url}/update`, (payload, thunkAPI) => {
     return thunkAPI.rejectWithValue(message);
   }
 });
-export const BROWSE = createAsyncThunk(`${url}/browse`, (params, thunkAPI) => {
-  try {
-    return axioKit.universal(url, params);
-  } catch (error) {
-    const message =
-      (error.response && error.response.data && error.response.data.message) ||
-      error.message ||
-      error.toString();
+export const HISTORY = createAsyncThunk(
+  `${url}/history`,
+  (params, thunkAPI) => {
+    try {
+      return axioKit.universal(`${url}/history`, params);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
 
-    return thunkAPI.rejectWithValue(message);
-  }
-});
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
 
 export const RECORDS = createAsyncThunk(
   `${url}/records`,
@@ -94,11 +99,11 @@ export const TODAY_SUMMARY = createAsyncThunk(
   },
 );
 
-export const GET_TODAY_RECORD = createAsyncThunk(
-  `${url}/get-today-record`,
+export const TODAY_RECORD = createAsyncThunk(
+  `${url}/today-record`,
   (params = {}, thunkAPI) => {
     try {
-      return axioKit.universal(`${url}/get-today-record`, params);
+      return axioKit.universal(`${url}/today/record`, params);
     } catch (error) {
       const message =
         (error.response &&
@@ -131,19 +136,19 @@ export const reduxSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(BROWSE.pending, (state) => {
+      .addCase(HISTORY.pending, (state) => {
         state.isFetchingList = true;
         state.isSuccess = false;
         state.message = "";
       })
-      .addCase(BROWSE.fulfilled, (state, action) => {
+      .addCase(HISTORY.fulfilled, (state, action) => {
         const { data, pagination } = action.payload;
         state.collections = data;
         state.pagination = pagination;
         state.isSuccess = true;
         state.isFetchingList = false;
       })
-      .addCase(BROWSE.rejected, (state, action) => {
+      .addCase(HISTORY.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
         state.isFetchingList = false;
@@ -184,18 +189,18 @@ export const reduxSlice = createSlice({
         state.isFetchingItem = false;
       })
 
-      .addCase(GET_TODAY_RECORD.pending, (state) => {
+      .addCase(TODAY_RECORD.pending, (state) => {
         state.isFetchingItem = true;
         state.isSuccess = false;
         state.message = "";
       })
-      .addCase(GET_TODAY_RECORD.fulfilled, (state, action) => {
+      .addCase(TODAY_RECORD.fulfilled, (state, action) => {
         const { data = {} } = action.payload;
         state.todayRecord = data;
         state.isSuccess = true;
         state.isFetchingItem = false;
       })
-      .addCase(GET_TODAY_RECORD.rejected, (state, action) => {
+      .addCase(TODAY_RECORD.rejected, (state, action) => {
         const { error } = action;
         state.message = error.message;
         state.isFetchingItem = false;
@@ -242,7 +247,7 @@ export const reduxSlice = createSlice({
         const index = _collections.findIndex(
           (item) => item.attendanceId === data.id,
         );
-        console.log("index", index);
+
         if (index > -1) {
           _collections[index] = { ..._collections[index], ...data };
         }

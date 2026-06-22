@@ -10,7 +10,7 @@ import { Table, TableBody } from "@/components/ui/table";
 import { History } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { BROWSE } from "@/services/redux/slices/attendance";
+import { HISTORY } from "@/services/redux/slices/attendance";
 import { TableSkeleton } from "@/components/shared/skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import Pagination from "@/components/shared/pagination";
@@ -28,10 +28,10 @@ const AttHistory = () => {
   const dispatch = useDispatch();
 
   const setPage = (page) => {
-    dispatch(BROWSE({ page, limit: pagination.limit }));
+    dispatch(HISTORY({ page, limit: pagination.limit }));
   };
   const setLimit = (limit) => {
-    dispatch(BROWSE({ page: pagination.page, limit }));
+    dispatch(HISTORY({ page: pagination.page, limit }));
   };
 
   return (

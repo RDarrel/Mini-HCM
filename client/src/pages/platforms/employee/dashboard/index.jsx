@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { BROWSE, GET_TODAY_RECORD } from "@/services/redux/slices/attendance";
+import { HISTORY, TODAY_RECORD } from "@/services/redux/slices/attendance";
 import utils from "./utils";
 import Punch from "./punch";
 import TodaySummary from "./todaySummary";
@@ -25,11 +25,11 @@ const Dashboard = () => {
 
   useEffect(() => {
     //Render on mount
-    dispatch(BROWSE({ page: pagination.page, limit: pagination.limit }));
+    dispatch(HISTORY({ page: pagination.page, limit: pagination.limit }));
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(GET_TODAY_RECORD());
+    dispatch(TODAY_RECORD());
   }, [dispatch]);
 
   useEffect(() => {
