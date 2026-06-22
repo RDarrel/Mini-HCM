@@ -59,19 +59,34 @@ const TableRecords = ({ params, reportType = "Daily" }) => {
                     {Formatter.fullName(report?.user?.name)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {Formatter.duration(report?.regularMinutes || 0)}
+                    {Formatter.duration(
+                      report?.regularMinutes || 0,
+                      report.timezone,
+                    )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {Formatter.duration(report?.overtimeMinutes || 0)}
+                    {Formatter.duration(
+                      report?.overtimeMinutes || 0,
+                      report.timezone,
+                    )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {Formatter.duration(report?.lateMinutes || 0)}
+                    {Formatter.duration(
+                      report?.lateMinutes || 0,
+                      report.timezone,
+                    )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {Formatter.duration(report?.undertimeMinutes || 0)}
+                    {Formatter.duration(
+                      report?.undertimeMinutes || 0,
+                      report.timezone,
+                    )}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {Formatter.duration(report?.nightDifferentialMinutes || 0)}
+                    {Formatter.duration(
+                      report?.nightDiffMinutes || 0,
+                      report.timezone,
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="outline" className="rounded-md">

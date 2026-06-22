@@ -36,7 +36,6 @@ const minDateTime = (a, b) => {
 };
 
 // Night differential is counted only from 10 PM to 6 AM.
-// Night differential is counted only from 10 PM to 6 AM.
 const computeNightDifferential = (timeIn, timeOut) => {
   let totalMinutes = 0;
   let windowDate = timeIn.startOf("day").minus({ days: 1 });
@@ -99,7 +98,6 @@ const computeDailySummary = ({
 
   const overtimeMinutes =
     regularMinutes > 0 ? diffInMinutes(shiftEnd, timeOutDT) : 0;
-
   return {
     regularMinutes,
     overtimeMinutes,
