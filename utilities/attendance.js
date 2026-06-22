@@ -108,4 +108,22 @@ const computeDailySummary = ({
   };
 };
 
-module.exports = { computeDailySummary };
+// Determines the work date used for attendance records.
+const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
+  const [startHour] = schedule.start.split(":").map(Number);
+  const [endHour] = schedule.end.split(":").map(Number);
+
+  let workDate = DateTime.fromJSDate(date).setZone(timezone);
+
+  const isNightShift = endHour <= startHour;
+  // Night shift example:
+  // Schedule: 22:00 - 06:00
+  // Punch at 05:00 AM should still belong to the previous work day.
+  if (isNightShift && workDate.hour < endHour) {
+    workDate = workDate.minus({ days: 1 });
+  }
+
+  return workDate.toFormat("yyyy-MM-dd");
+};
+
+module.exports = { computeDailySummary, getWorkDate };

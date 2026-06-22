@@ -1,25 +1,16 @@
 const { db, admin } = require("../config/firebase");
 const { DateTime } = require("luxon");
-const { computeDailySummary } = require("../utilities/attendance");
+const { computeDailySummary, getWorkDate } = require("../utilities/attendance");
 const { getPagination, getPaginationMeta } = require("../utilities/pagination");
 
-// Determines the work date used for attendance records.
-const getWorkDate = (date, schedule, timezone = "Asia/Manila") => {
-  const [startHour] = schedule.start.split(":").map(Number);
-  const [endHour] = schedule.end.split(":").map(Number);
-
-  let workDate = DateTime.fromJSDate(date).setZone(timezone);
-
-  const isNightShift = endHour <= startHour;
-  // Night shift example:
-  // Schedule: 22:00 - 06:00
-  // Punch at 05:00 AM should still belong to the previous work day.
-  if (isNightShift && workDate.hour < endHour) {
-    workDate = workDate.minus({ days: 1 });
-  }
-
-  return workDate.toFormat("yyyy-MM-dd");
-};
+const SUMMARY_FIELDS = [
+  "lateMinutes",
+  "overtimeMinutes",
+  "nightDiffMinutes",
+  "regularMinutes",
+  "undertimeMinutes",
+  "totalLoggedMinutes",
+];
 
 exports.myHistory = async (req, res) => {
   try {
@@ -59,8 +50,8 @@ exports.myHistory = async (req, res) => {
   }
 };
 
-// Fetch the summary record linked to an attendance entry.
-const getDailySummary = async (attendanceId) => {
+// Get a daily summary record by ID.
+const getSummaryById = async (attendanceId) => {
   const doc = await db.collection("dailySummary").doc(attendanceId).get();
 
   return doc.exists
@@ -95,7 +86,7 @@ exports.todayRecord = async (req, res) => {
       });
     }
 
-    const summary = await getDailySummary(doc.id);
+    const summary = await getSummaryById(doc.id);
 
     res.json({
       message: "Today record fetched successfully",
@@ -342,10 +333,67 @@ exports.todaySummary = async (req, res) => {
   }
 };
 
+const aggregateSummaryByUser = (docs) => {
+  return Object.values(
+    docs.reduce((acc, curr) => {
+      const summary = curr.data();
+      const key = summary.userId;
+
+      if (!acc[key]) {
+        acc[key] = {
+          ...summary,
+          ...Object.fromEntries(SUMMARY_FIELDS.map((field) => [field, 0])),
+        };
+      }
+
+      SUMMARY_FIELDS.forEach((field) => {
+        acc[key][field] += summary[field] || 0;
+      });
+
+      return acc;
+    }, {}),
+  );
+};
+
+const getUserMap = async (userIds) => {
+  if (!userIds.length) return new Map();
+
+  const usersSnapshot = await db
+    .collection("users")
+    .where("uid", "in", userIds)
+    .get();
+
+  return new Map(
+    usersSnapshot.docs.map((doc) => {
+      const user = doc.data();
+      const { role, ...rest } = user;
+
+      return [
+        user.uid,
+        {
+          uid: user.uid,
+          ...rest,
+        },
+      ];
+    }),
+  );
+};
+
+const filterSummaryBySearch = (summaries, keyword) => {
+  if (!keyword) return summaries;
+
+  return summaries.filter(({ user }) => {
+    const fname = user?.name?.fname?.toLowerCase() || "";
+    const lname = user?.name?.lname?.toLowerCase() || "";
+    const fullName = `${fname} ${lname}`;
+
+    return fullName.includes(keyword);
+  });
+};
+
 exports.records = async (req, res) => {
   try {
     const { from, to, search = "" } = req.query;
-    const { role } = req.user;
 
     if (!from || !to) {
       return res.status(400).json({ error: "From and to date are required!" });
@@ -360,86 +408,30 @@ exports.records = async (req, res) => {
       .orderBy("workDate", "desc")
       .get();
 
-    const fields = [
-      "lateMinutes",
-      "overtimeMinutes",
-      "nightDiffMinutes",
-      "regularMinutes",
-      "undertimeMinutes",
-      "totalLoggedMinutes",
-    ];
-
-    const computedDailySummary = Object.values(
-      dailySummarySnapshot.docs.reduce((acc, curr) => {
-        const summary = curr.data();
-        const key = summary.userId;
-
-        if (!acc[key]) {
-          acc[key] = {
-            ...summary,
-            lateMinutes: 0,
-            overtimeMinutes: 0,
-            nightDiffMinutes: 0,
-            regularMinutes: 0,
-            undertimeMinutes: 0,
-            totalLoggedMinutes: 0,
-          };
-        }
-
-        fields.forEach((field) => {
-          acc[key][field] += summary[field] || 0;
-        });
-
-        return acc;
-      }, {}),
+    // Aggregate attendance metrics per employee
+    const computedDailySummary = aggregateSummaryByUser(
+      dailySummarySnapshot.docs,
     );
 
     const userIds = [
       ...new Set(computedDailySummary.map((item) => item.userId)),
     ];
 
-    let userMap = new Map();
-
-    if (userIds.length > 0) {
-      const usersSnapshot = await db
-        .collection("users")
-        .where("uid", "in", userIds)
-        .get();
-
-      userMap = new Map(
-        usersSnapshot.docs.map((doc) => {
-          const user = doc.data();
-          const { role, ...rest } = user;
-          return [
-            user.uid,
-            {
-              uid: user.uid,
-              ...rest,
-            },
-          ];
-        }),
-      );
-    }
+    // Load employee information and create a lookup map
+    const userMap = await getUserMap(userIds);
 
     const keyword = search.toLowerCase().trim();
 
-    const filteredSummary = computedDailySummary
-      .map((summary) => ({
-        ...summary,
-        user: userMap.get(summary.userId) || null,
-      }))
-      .filter(({ user }) => {
-        if (!keyword) return true;
+    // Attach employee details to each aggregated summary
+    const summariesWithUser = computedDailySummary.map((summary) => ({
+      ...summary,
+      user: userMap.get(summary.userId) || null,
+    }));
 
-        const fname = user?.name?.fname?.toLowerCase() || "";
-        const lname = user?.name?.lname?.toLowerCase() || "";
-        const fullName = `${fname} ${lname}`;
-
-        return fullName.includes(keyword);
-      });
+    // Apply employee name search filter
+    const filteredSummary = filterSummaryBySearch(summariesWithUser, keyword);
 
     const totalRecords = filteredSummary.length;
-
     const records = filteredSummary.slice(offset, offset + limit);
 
     res.json({
@@ -515,6 +507,7 @@ exports.update = async (req, res) => {
         lastEdit: {
           reason,
           by: req.user.uid,
+          at: admin.firestore.FieldValue.serverTimestamp(),
         },
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
