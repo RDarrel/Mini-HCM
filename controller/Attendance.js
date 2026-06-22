@@ -347,7 +347,7 @@ exports.todaySummary = async (req, res) => {
 exports.records = async (req, res) => {
   try {
     const { from, to } = req.query;
-    const { timezone, role } = req.user;
+    const { role } = req.user;
 
     if (role !== "administrator") {
       return res.status(403).json({ error: "You are not authorized" });
@@ -359,29 +359,53 @@ exports.records = async (req, res) => {
 
     const { page, limit, offset } = getPagination(req.query);
 
-    const workDate = DateTime.now()
-      .setZone(timezone || "Asia/Manila")
-      .toISODate();
-
     const dailySummaryQuery = db
       .collection("dailySummary")
       .where("workDate", ">=", from)
-      .where("workDate", "<=", to);
+      .where("workDate", "<=", to)
+      .orderBy("workDate", "desc");
 
-    const [dailySummarySnapshot, totalSnapshot] = await Promise.all([
-      dailySummaryQuery
-        .orderBy("workDate", "desc")
-        .limit(limit)
-        .offset(offset)
-        .get(),
-      dailySummaryQuery.count().get(),
-    ]);
+    const dailySummarySnapshot = await dailySummaryQuery.get();
 
-    const totalRecords = totalSnapshot.data().count;
-
-    const userIds = [
-      ...new Set(dailySummarySnapshot.docs.map((doc) => doc.data().userId)),
+    const fields = [
+      "lateMinutes",
+      "overtimeMinutes",
+      "nightDiffMinutes",
+      "regularMinutes",
+      "undertimeMinutes",
+      "totalLoggedMinutes",
     ];
+
+    const computedDailySummary = Object.values(
+      dailySummarySnapshot.docs.reduce((acc, curr) => {
+        const summary = curr.data();
+        const key = summary.userId;
+
+        if (!acc[key]) {
+          acc[key] = {
+            userId: summary.userId,
+            lateMinutes: 0,
+            overtimeMinutes: 0,
+            nightDiffMinutes: 0,
+            regularMinutes: 0,
+            undertimeMinutes: 0,
+            totalLoggedMinutes: 0,
+          };
+        }
+
+        fields.forEach((field) => {
+          acc[key][field] += summary[field] || 0;
+        });
+
+        return acc;
+      }, {}),
+    );
+
+    const totalRecords = computedDailySummary.length;
+
+    const paginatedSummary = computedDailySummary.slice(offset, offset + limit);
+
+    const userIds = [...new Set(paginatedSummary.map((item) => item.userId))];
 
     let userMap = new Map();
 
@@ -407,15 +431,10 @@ exports.records = async (req, res) => {
       );
     }
 
-    const records = dailySummarySnapshot.docs.map((doc) => {
-      const attendance = doc.data();
-
-      return {
-        id: doc.id,
-        ...attendance,
-        user: userMap.get(attendance.userId) || null,
-      };
-    });
+    const records = paginatedSummary.map((summary) => ({
+      ...summary,
+      user: userMap.get(summary.userId) || null,
+    }));
 
     res.json({
       message: "Records fetched successfully",
