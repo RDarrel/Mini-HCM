@@ -1,5 +1,5 @@
-import Daily from "./daily";
 import Weekly from "./weekly";
+import CustomDatePicker from "@/components/shared/datepicker";
 const Filters = ({
   dailyDate,
   reportType,
@@ -8,7 +8,7 @@ const Filters = ({
   weeklyRange,
 }) => {
   const filterMap = {
-    daily: Daily,
+    daily: CustomDatePicker,
     weekly: Weekly,
   };
 

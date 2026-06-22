@@ -63,7 +63,7 @@ const EmployeeRecords = ({ from, to }) => {
                 <TableSkeleton numberOfRows={2} numberOfColumns={4} />
               ) : collections?.length > 0 ? (
                 collections.map((employee) => (
-                  <TableRow key={employee.id} className="hover:bg-muted/30">
+                  <TableRow key={employee.userId} className="hover:bg-muted/30">
                     <TableCell>
                       <div className="font-medium">
                         {Formatter.fullName(employee?.user?.name)}

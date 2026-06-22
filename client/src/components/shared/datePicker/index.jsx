@@ -18,7 +18,7 @@ const formatDate = (date) =>
       })
     : "Select date";
 
-const Daily = ({ date, setDate }) => {
+const Daily = ({ date = new Date(), setDate = () => {} }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -41,7 +41,6 @@ const Daily = ({ date, setDate }) => {
           selected={date}
           onSelect={(selectedDate) => {
             if (!selectedDate) return;
-
             setDate(selectedDate);
             setOpen(false);
           }}

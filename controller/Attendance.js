@@ -389,6 +389,9 @@ exports.records = async (req, res) => {
             regularMinutes: 0,
             undertimeMinutes: 0,
             totalLoggedMinutes: 0,
+            workDate: summary.workDate,
+            timeIn: summary.timeIn,
+            timeOut: summary.timeOut,
           };
         }
 

@@ -7,13 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search } from "lucide-react";
 import { RECORDS } from "@/services/redux/slices/attendance";
 import { toISODate } from "@/services/utilities";
 import Filters from "./filters";
 import TableRecords from "./table";
+import DebouncedInput from "@/components/shared/debouncedInput";
 
 const Reports = () => {
   const { auth } = useSelector(({ auth }) => auth);
@@ -21,20 +20,10 @@ const Reports = () => {
   const dispatch = useDispatch();
   const timezone = auth?.timezone || "Asia/Manila";
   const limitRef = useRef(pagination.limit);
-
-  const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [reportType, setReportType] = useState("daily");
   const [dailyDate, setDailyDate] = useState(() => new Date());
   const [weeklyRange, setWeeklyRange] = useState(null);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [search]);
 
   useEffect(() => {
     limitRef.current = pagination.limit;
@@ -102,16 +91,11 @@ const Reports = () => {
                     setWeeklyRange={setWeeklyRange}
                     weeklyRange={weeklyRange}
                   />
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search reports"
-                      className="pl-9"
-                      type="search"
-                    />
-                  </div>
+                  <DebouncedInput
+                    value={debouncedSearch}
+                    onDebounce={setDebouncedSearch}
+                    label="Search employees.."
+                  />
                 </div>
               </div>
               <TabsContent value="daily">
