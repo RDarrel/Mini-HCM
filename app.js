@@ -3,7 +3,6 @@ const express = require("express"),
   path = require("path"),
   http = require("http"),
   cors = require("cors"),
-  whitelisted = require("./middleware/whitelist"),
   whitelist = require("./config/whitelist"),
   { red, green } = require("colorette");
 require("dotenv").config();
@@ -20,6 +19,7 @@ const corsConfig = {
     "Authorization",
   ], // Allowed Headers to be received
 };
+
 // Comment when client and server are joined
 app.use(cors(corsConfig)); // Pass configuration to cors
 
@@ -31,10 +31,6 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "50mb" }));
-
-// Uncomment when deployed to disable calls from postman
-// Only use when client and server are at separate deployments
-// app.use(whitelisted);
 
 // Routes
 require("./routes")(app);
