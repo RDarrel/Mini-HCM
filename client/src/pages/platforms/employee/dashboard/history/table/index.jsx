@@ -10,10 +10,10 @@ import {
 import { useSelector } from "react-redux";
 import { Formatter } from "@/services/utilities";
 import { DailySummaryTile } from "../components";
-import { AttendanceStatus } from "../components";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import utils from "../../utils";
+import StatusBadge from "@/components/shared/statusBadge";
 
 const HistoryTable = () => {
   const { auth } = useSelector(({ auth }) => auth);
@@ -83,7 +83,7 @@ const HistoryTableRow = memo(
               : "-"}
           </TableCell>
           <TableCell>
-            <AttendanceStatus status={record.status} />
+            <StatusBadge status={record.status} />
           </TableCell>
           <TableCell className="text-right">
             <Button

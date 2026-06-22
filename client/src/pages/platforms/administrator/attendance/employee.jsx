@@ -3,6 +3,7 @@ import { Formatter } from "@/services/utilities";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pen } from "lucide-react";
+import StatusBadge from "@/components/shared/statusBadge";
 const Employee = ({ employee, handleSelected = () => {} }) => {
   return (
     <TableRow key={employee.userId} className="hover:bg-muted/30">
@@ -18,7 +19,7 @@ const Employee = ({ employee, handleSelected = () => {} }) => {
         {Formatter.time(employee.timeOut, employee.timezone)}
       </TableCell>
       <TableCell className="font-medium tabular-nums">
-        {Formatter.duration(employee.totalLoggedMinutes, employee.timezone)}
+        <StatusBadge status={employee.status} />
       </TableCell>
       <TableCell className="font-medium tabular-nums">
         <Button size="icon" onClick={() => handleSelected(employee)}>

@@ -98,98 +98,98 @@
 :root {
   --radius: 0.625rem;
 
-  /* Sandy's Kitchenette - cheerful family-restaurant palette */
-  --background: #fffaf2;
-  --foreground: #3b2418;
+  /* Warm professional blue theme */
+  --background: #fbf8f0;
+  --foreground: #111827;
 
   --card: #fffdf8;
-  --card-foreground: #3b2418;
+  --card-foreground: #111827;
 
   --popover: #fffdf8;
-  --popover-foreground: #3b2418;
+  --popover-foreground: #111827;
 
-  --primary: #c62828;
-  --primary-foreground: #fffdf8;
+  --primary: #15577c;
+  --primary-foreground: #ffffff;
 
-  --secondary: #ffe4b8;
-  --secondary-foreground: #5a3420;
+  --secondary: #e7f1f8;
+  --secondary-foreground: #123d5d;
 
-  --muted: #f6eadb;
-  --muted-foreground: #7b5b46;
+  --muted: #f0eee7;
+  --muted-foreground: #667685;
 
-  --accent: #f6b81a;
-  --accent-foreground: #4a2c12;
+  --accent: #d9edf8;
+  --accent-foreground: #0f3856;
 
   --destructive: #dc2626;
 
-  --border: #efd7bc;
-  --input: #efd7bc;
-  --ring: #c62828;
+  --border: #d9e2e8;
+  --input: #d9e2e8;
+  --ring: #15577c;
 
-  /* Slightly darker than card/background so loading states stay visible */
-  --skeleton: #eddcc7;
+  /* Neutral gray so loading states still read as skeletons */
+  --skeleton: #e5e7eb;
 
-  --chart-1: #c62828;
-  --chart-2: #f6b81a;
-  --chart-3: #ff8f00;
-  --chart-4: #8d4b32;
-  --chart-5: #ef5350;
+  --chart-1: #15577c;
+  --chart-2: #2f7da7;
+  --chart-3: #74aeca;
+  --chart-4: #0e405f;
+  --chart-5: #7c8da3;
 
-  --sidebar: #fffbf5;
-  --sidebar-foreground: #3b2418;
-  --sidebar-primary: #c62828;
-  --sidebar-primary-foreground: #fffdf8;
-  --sidebar-accent: #f6b81a;
-  --sidebar-accent-foreground: #4a2c12;
-  --sidebar-border: #efd7bc;
-  --sidebar-ring: #c62828;
+  --sidebar: #f8f5ed;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #15577c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d9edf8;
+  --sidebar-accent-foreground: #0f3856;
+  --sidebar-border: #d9e2e8;
+  --sidebar-ring: #15577c;
 }
 
 .dark {
-  --background: #231511;
-  --foreground: #fff1df;
+  --background: #0d1d2a;
+  --foreground: #edf6fb;
 
-  --card: #321d16;
-  --card-foreground: #fff1df;
+  --card: #132b3c;
+  --card-foreground: #edf6fb;
 
-  --popover: #321d16;
-  --popover-foreground: #fff1df;
+  --popover: #132b3c;
+  --popover-foreground: #edf6fb;
 
-  --primary: #ef5350;
-  --primary-foreground: #2a120e;
+  --primary: #8bc3df;
+  --primary-foreground: #082033;
 
-  --secondary: #4a2d1f;
-  --secondary-foreground: #fff1df;
+  --secondary: #203d53;
+  --secondary-foreground: #edf6fb;
 
-  --muted: #40261b;
-  --muted-foreground: #d8b8a0;
+  --muted: #1b3040;
+  --muted-foreground: #acc0cd;
 
-  --accent: #ffca28;
-  --accent-foreground: #412109;
+  --accent: #24506a;
+  --accent-foreground: #edf6fb;
 
   --destructive: #ef4444;
 
-  --border: #5a3929;
-  --input: #5a3929;
-  --ring: #ef5350;
+  --border: #315165;
+  --input: #315165;
+  --ring: #8bc3df;
 
-  /* Slightly lighter than dark card surfaces for readable contrast */
-  --skeleton: #4a2f23;
+  /* Neutral gray so loading states still read as skeletons */
+  --skeleton: #374151;
 
-  --chart-1: #ef5350;
-  --chart-2: #ffca28;
-  --chart-3: #ff8a65;
-  --chart-4: #a05a2c;
-  --chart-5: #ffe082;
+  --chart-1: #8bc3df;
+  --chart-2: #5ea8ca;
+  --chart-3: #a6d1e4;
+  --chart-4: #2f7da7;
+  --chart-5: #acc0cd;
 
-  --sidebar: #2b1812;
-  --sidebar-foreground: #fff1df;
-  --sidebar-primary: #ef5350;
-  --sidebar-primary-foreground: #2a120e;
-  --sidebar-accent: #ffca28;
-  --sidebar-accent-foreground: #412109;
-  --sidebar-border: #5a3929;
-  --sidebar-ring: #ef5350;
+  --sidebar: #0f2433;
+  --sidebar-foreground: #edf6fb;
+  --sidebar-primary: #8bc3df;
+  --sidebar-primary-foreground: #082033;
+  --sidebar-accent: #203d53;
+  --sidebar-accent-foreground: #edf6fb;
+  --sidebar-border: #315165;
+  --sidebar-ring: #8bc3df;
 }
 
 @layer base {

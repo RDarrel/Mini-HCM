@@ -18,8 +18,9 @@ import { Formatter } from "@/services/utilities";
 import { useSelector, useDispatch } from "react-redux";
 import { TableSkeleton } from "@/components/shared/skeleton";
 import { RECORDS } from "@/services/redux/slices/attendance";
-import Pagination from "@/components/shared/pagination";
 import { CalendarX } from "lucide-react";
+import Pagination from "@/components/shared/pagination";
+import StatusBadge from "@/components/shared/statusBadge";
 
 const EmployeeRecords = ({ from, to }) => {
   const {
@@ -56,6 +57,7 @@ const EmployeeRecords = ({ from, to }) => {
                 <TableHead>Punch In</TableHead>
                 <TableHead>Punch Out</TableHead>
                 <TableHead>Total Logged</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,6 +77,9 @@ const EmployeeRecords = ({ from, to }) => {
                     </TableCell>
                     <TableCell className="font-medium tabular-nums">
                       {Formatter.duration(employee.totalLoggedMinutes)}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={employee.status} />
                     </TableCell>
                   </TableRow>
                 ))

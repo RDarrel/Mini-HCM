@@ -1,6 +1,5 @@
 import Pagination from "@/components/shared/pagination";
 import { TableSkeleton } from "@/components/shared/skeleton";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -13,6 +12,7 @@ import { Formatter } from "@/services/utilities";
 import { RECORDS } from "@/services/redux/slices/attendance";
 import { CalendarX } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
+import StatusBadge from "@/components/shared/statusBadge";
 
 const TableRecords = ({ params, reportType = "Daily" }) => {
   const {
@@ -89,9 +89,7 @@ const TableRecords = ({ params, reportType = "Daily" }) => {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="outline" className="rounded-md">
-                      {report.status || "Recorded"}
-                    </Badge>
+                    <StatusBadge status={report.status} />
                   </TableCell>
                 </TableRow>
               ))
