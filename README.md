@@ -10,16 +10,19 @@ https://github.com/yourusername/mini-hcm
 
 ## Features
 
+## Features
+
 - User Registration & Authentication
 - Punch In / Punch Out
 - Daily Summary Dashboard
 - Attendance History
 - Admin Attendance Management
-- Daily Reports
-- Weekly Reports
-- Overtime Calculation
-- Night Differential Calculation
-- Late and Undertime Calculation
+- Daily and Weekly Reporting
+- Automatic Regular Hours Computation
+- Automatic Overtime (OT) Computation
+- Automatic Night Differential (ND) Computation
+- Automatic Late Arrival Computation
+- Automatic Undertime Computation
 
 ## Test Accounts
 
@@ -42,9 +45,14 @@ Password: Password@54321
 
 ## Installation
 
+Backend
+npm install
+npm run start
+
 ### Client
 
 ```bash
+cd client
 npm install
 npm run dev
 ```
