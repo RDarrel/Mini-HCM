@@ -22,25 +22,38 @@ const Reports = () => {
   const timezone = auth?.timezone || "Asia/Manila";
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [reportType, setReportType] = useState("daily");
   const [dailyDate, setDailyDate] = useState(() => new Date());
   const [weeklyRange, setWeeklyRange] = useState(null);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search]);
+
   const recordParams = useMemo(() => {
+    const keyword = debouncedSearch ? { search: debouncedSearch } : {};
+
     if (reportType === "weekly") {
       if (!weeklyRange) return null;
 
       return {
         from: toISODate(new Date(weeklyRange.startDate), timezone),
         to: toISODate(new Date(weeklyRange.endDate), timezone),
+        ...keyword,
       };
     }
 
     return {
       from: toISODate(dailyDate, timezone),
       to: toISODate(dailyDate, timezone),
+      ...keyword,
     };
-  }, [dailyDate, reportType, timezone, weeklyRange]);
+  }, [dailyDate, debouncedSearch, reportType, timezone, weeklyRange]);
 
   useEffect(() => {
     if (!recordParams) return;
@@ -104,14 +117,12 @@ const Reports = () => {
                 <TableRecords
                   params={recordParams}
                   reportType="Daily"
-                  search={search}
                 />
               </TabsContent>
               <TabsContent value="weekly">
                 <TableRecords
                   params={recordParams}
                   reportType="Weekly"
-                  search={search}
                 />
               </TabsContent>
             </Tabs>

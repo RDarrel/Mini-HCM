@@ -15,7 +15,7 @@ import { CalendarX } from "lucide-react";
 import { useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-const TableRecords = ({ params, reportType = "Daily", search = "" }) => {
+const TableRecords = ({ params, reportType = "Daily" }) => {
   const {
     collections = [],
     pagination,
@@ -30,24 +30,6 @@ const TableRecords = ({ params, reportType = "Daily", search = "" }) => {
     }),
     [pagination.limit, params],
   );
-
-  const filteredRecords = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-
-    if (!keyword) return collections;
-
-    return collections.filter((report) =>
-      [
-        Formatter.fullName(report?.user?.name),
-        report?.status,
-        report?.user?.email,
-      ].some((value) =>
-        String(value || "")
-          .toLowerCase()
-          .includes(keyword),
-      ),
-    );
-  }, [collections, search]);
 
   const setPage = (page) => {
     if (!params) return;
@@ -77,10 +59,10 @@ const TableRecords = ({ params, reportType = "Daily", search = "" }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isFetchingList ? (
-              <TableSkeleton numberOfRows={5} numberOfColumns={7} />
-            ) : filteredRecords.length ? (
-              filteredRecords.map((report) => (
+          {isFetchingList ? (
+            <TableSkeleton numberOfRows={5} numberOfColumns={7} />
+          ) : collections.length ? (
+            collections.map((report) => (
                 <TableRow key={report.id} className="hover:bg-muted/30">
                   <TableCell className="font-medium">
                     {Formatter.fullName(report?.user?.name)}
