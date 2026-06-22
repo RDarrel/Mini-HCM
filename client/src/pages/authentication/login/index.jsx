@@ -37,7 +37,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Welcome to Mini HCM</h1>
           <p className="text-sm text-balance text-muted-foreground">
-            Enter your email below to login to your account
+            Enter your email below to sign in to your account
           </p>
         </div>
         <Field>
@@ -62,24 +62,27 @@ export default function LoginForm({ setIsLogin = () => {} }) {
           </div>
           <PasswordInput
             id="password"
+            placeholder="••••••••"
             required
             autoComplete="current-password"
           />
         </Field>
         <Field>
           <Button type="submit" disabled={isLoading}>
-            Login {isLoading && <Loader className="animate-spin" />}
+            Sign in {isLoading && <Loader className="animate-spin" />}
           </Button>
         </Field>
         <Field>
-          <FieldDescription
-            className="text-center"
-            onClick={() => setIsLogin(false)}
-          >
+          <FieldDescription className="text-center">
             Don&apos;t have an account?{" "}
-            <a href="#" className="underline underline-offset-4">
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0"
+              onClick={() => setIsLogin(false)}
+            >
               Sign up
-            </a>
+            </Button>
           </FieldDescription>
         </Field>
       </FieldGroup>

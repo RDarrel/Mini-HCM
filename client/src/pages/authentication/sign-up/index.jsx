@@ -71,7 +71,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
   };
   return (
     <form onSubmit={handleLogin}>
-      <FieldGroup className="flex flex-col gap-3">
+      <FieldGroup className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Welcome to Mini HCM</h1>
           <p className="text-sm text-balance text-muted-foreground">
@@ -121,7 +121,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
         <FieldDescription className="font-semibold text-destructive -mt-2 ">
           {passWarning}
         </FieldDescription>
-        <small className="text-xs text-muted-foreground">
+        <small className="text-xs text-muted-foreground -mt-5">
           A strong password must contain lowercase and UPPERCASE letters,
           numbers and character symbols.
         </small>
@@ -132,14 +132,16 @@ export default function LoginForm({ setIsLogin = () => {} }) {
           </Button>
         </Field>
         <Field>
-          <FieldDescription
-            className="text-center"
-            onClick={() => setIsLogin(true)}
-          >
+          <FieldDescription className="text-center">
             Already have an account?{" "}
-            <a href="#" className="underline underline-offset-4">
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0"
+              onClick={() => setIsLogin(true)}
+            >
               Sign in
-            </a>
+            </Button>
           </FieldDescription>
         </Field>
       </FieldGroup>
