@@ -6,8 +6,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useMemo, useState } from "react";
+import { MONTHS } from "@/constants";
 import utils from "./utils";
-import MONTHS from "@/constants";
 const years = ["2026", "2025", "2024"];
 
 const Weekly = ({ setWeeklyRange }) => {
@@ -34,14 +34,14 @@ const Weekly = ({ setWeeklyRange }) => {
   const handleYearChange = (value) => {
     setYear(value);
 
-    const nextWeek = getCurrentWeekValue(value, month);
+    const nextWeek = utils.getCurrentWeekValue(value, month);
     setWeek(nextWeek);
   };
 
   const handleMonthChange = (value) => {
     setMonth(value);
 
-    const nextWeek = getCurrentWeekValue(year, value);
+    const nextWeek = utils.getCurrentWeekValue(year, value);
     setWeek(nextWeek);
   };
 
