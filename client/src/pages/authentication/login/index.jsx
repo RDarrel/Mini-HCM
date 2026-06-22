@@ -27,7 +27,7 @@ export default function LoginForm({ setIsLogin = () => {} }) {
       .then(() => navigate("/platforms/dashboard"))
       .catch((error) => {
         toast.error(error, {
-          duration: 1000, // 1 second lang bago mawala
+          duration: 1000,
         });
       });
   };
