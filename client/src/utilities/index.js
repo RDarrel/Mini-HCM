@@ -1,8 +1,6 @@
 import axioKit from "./axioKit";
-import handlePagination from "./pagination";
 import Male from "../assets/male.jpg";
 import Female from "../assets/female.jpg";
-import globalSearch from "./globalSearch";
 import Formatter from "./formatter";
 import { toISODate, getTimezone } from "./date";
 // const ENDPOINT = "http://localhost:5000";
@@ -15,13 +13,4 @@ const PresetImage = (gender) => {
   return Female;
 };
 
-export {
-  Formatter,
-  ENDPOINT,
-  axioKit,
-  getTimezone,
-  toISODate,
-  PresetImage,
-  handlePagination,
-  globalSearch,
-};
+export { Formatter, ENDPOINT, axioKit, getTimezone, toISODate, PresetImage };

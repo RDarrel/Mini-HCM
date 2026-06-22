@@ -25,7 +25,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     //Render on mount
-    dispatch(HISTORY({ page: pagination.page, limit: pagination.limit }));
+    dispatch(HISTORY({ page: pagination?.page, limit: pagination?.limit }));
     //Unmount
     return () => dispatch(RESET());
   }, [dispatch]);
