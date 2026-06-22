@@ -1,12 +1,14 @@
 import { DateTime } from "luxon";
 import { Formatter } from "@/services/utilities";
 const { toJSDate } = Formatter;
-const DEFAULT_TIMEZONE = "Asia/Manila";
 
+const isValidDateTime = (dateTime) =>
+  DateTime.isDateTime(dateTime) && dateTime.isValid;
 const toDateTime = (timestamp, timezone) =>
   DateTime.fromJSDate(toJSDate(timestamp)).setZone(timezone);
 
 const getShiftDateTime = (baseDateTime, timeString) => {
+  if (!isValidDateTime(baseDateTime) || !timeString) return null;
   const [hour, minute] = timeString.split(":").map(Number);
 
   return baseDateTime.set({
@@ -18,6 +20,8 @@ const getShiftDateTime = (baseDateTime, timeString) => {
 };
 
 const diffInMinutes = (start, end) => {
+  if (!isValidDateTime(start) || !isValidDateTime(end)) return 0;
+
   return Math.max(0, Math.floor(end.diff(start, "minutes").minutes));
 };
 
@@ -52,7 +56,7 @@ const computeNightDifferential = (timeIn, timeOut) => {
 const computeDailySummary = (
   attendance,
   schedule,
-  timezone = DEFAULT_TIMEZONE,
+  timezone = "Asia/Manila",
 ) => {
   if (!attendance || !schedule)
     return {

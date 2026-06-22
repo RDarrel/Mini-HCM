@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Table, TableBody } from "@/components/ui/table";
 import { History } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -57,7 +58,11 @@ const AttHistory = () => {
             </div>
             {/* Full view loading */}
             <div className="hidden overflow-hidden  md:block">
-              <TableSkeleton numberOfColumns={6} />
+              <Table>
+                <TableBody>
+                  <TableSkeleton numberOfColumns={6} />
+                </TableBody>
+              </Table>
             </div>
           </>
         ) : collections.length ? (

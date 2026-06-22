@@ -190,7 +190,7 @@ export const reduxSlice = createSlice({
         state.message = "";
       })
       .addCase(GET_TODAY_RECORD.fulfilled, (state, action) => {
-        const { data } = action.payload;
+        const { data = {} } = action.payload;
         state.todayRecord = data;
         state.isSuccess = true;
         state.isFetchingItem = false;

@@ -19,6 +19,7 @@ const TodaySummary = ({
   const { isFetchingItem: isLoading } = useSelector(
     ({ attendance }) => attendance,
   );
+  console.log("summaryItems", summaryItems);
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
