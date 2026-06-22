@@ -5,6 +5,7 @@ const { getPagination, getPaginationMeta } = require("../utilities/pagination");
 const attendanceService = require("../services/attendance.service");
 const reportService = require("../services/report.service");
 
+// Get employee attendance history
 exports.myHistory = async (req, res) => {
   try {
     const userId = req.user.uid;
@@ -243,7 +244,7 @@ exports.update = async (req, res) => {
     } = req.body;
 
     if (!timeIn || !timeOut || !userId || !id || !reason) {
-      return res.status(400).json({ error: "All fields are required!" });
+      return res.status(400).json({ error: "Missing required fields!" });
     }
 
     const userSnapshot = await db.collection("users").doc(userId).get();
