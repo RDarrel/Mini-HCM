@@ -38,7 +38,7 @@ const HistoryCard = memo(({ record, timezone = "Asia/Manila" }) => (
         label="Total"
         value={
           record?.timeOut
-            ? Formatter.duration(record.totalLoggedMinutes || 0, timezone)
+            ? Formatter.duration(record.totalLoggedMinutes || 0)
             : "-"
         }
       />
