@@ -39,7 +39,7 @@ const Dashboard = () => {
   }, []);
 
   const { totalLoggedMinutes, ...summary } = useMemo(
-    () => utils.compute.dailySummary(todayRecord, schedule, timezone),
+    () => utils.computeDailySummary(todayRecord, schedule, timezone),
     [todayRecord, schedule, timezone, now],
   );
 

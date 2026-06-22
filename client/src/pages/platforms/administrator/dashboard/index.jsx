@@ -48,7 +48,7 @@ const Dashboard = () => {
         <KPIs
           kpis={shiftKpis}
           title="Attendance Activity"
-          description="Current shift and premium counts."
+          description="Shift activity overview."
         />
 
         <EmployeeRecords from={from} to={to} />

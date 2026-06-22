@@ -3,10 +3,7 @@ import { Formatter } from "@/utilities";
 import dailySummary from "./dailySummary";
 
 const utils = {
-  compute: {
-    dailySummary,
-  },
-
+  computeDailySummary: dailySummary,
   statusLabel: (attendance = null) => {
     if (!attendance?.timeIn) return "Ready to Punch In";
     if (attendance.timeIn && !attendance.timeOut) return "Ready to Punch Out";

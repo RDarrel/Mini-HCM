@@ -62,7 +62,7 @@ const EmployeeRecords = ({ from, to }) => {
             </TableHeader>
             <TableBody>
               {isFetchingList ? (
-                <TableSkeleton numberOfRows={2} numberOfColumns={4} />
+                <TableSkeleton numberOfRows={2} numberOfColumns={5} />
               ) : collections?.length > 0 ? (
                 collections.map((employee) => (
                   <TableRow key={employee.userId} className="hover:bg-muted/30">
@@ -85,7 +85,7 @@ const EmployeeRecords = ({ from, to }) => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="p-0">
+                  <TableCell colSpan={5} className="p-0">
                     <EmptyRecords />
                   </TableCell>
                 </TableRow>
