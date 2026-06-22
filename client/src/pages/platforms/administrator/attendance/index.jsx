@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Formatter } from "@/services/utilities";
 import { useSelector, useDispatch } from "react-redux";
 import { TableSkeleton } from "@/components/shared/skeleton";
 import { RECORDS } from "@/services/redux/slices/attendance";
@@ -23,18 +22,22 @@ import { CalendarX } from "lucide-react";
 import CustomDatePicker from "@/components/shared/datepicker";
 import DebouncedInput from "@/components/shared/debouncedInput";
 import { toISODate } from "@/services/utilities";
+import Employee from "./employee";
+import CustomModal from "./modal";
 
 const Attendance = () => {
-  const { auth } = useSelector(({ auth }) => auth);
-  const {
-    collections,
-    pagination,
-    isFetchingList = false,
-  } = useSelector(({ attendance }) => attendance);
-  const [search, setSearch] = useState("");
-  const [date, setDate] = useState(new Date());
-  const limitRef = useRef(pagination.limit);
-  const dispatch = useDispatch();
+  const { auth } = useSelector(({ auth }) => auth),
+    {
+      collections,
+      pagination,
+      isFetchingList = false,
+    } = useSelector(({ attendance }) => attendance),
+    [selected, setSelected] = useState({}),
+    [openModal, setOpenModal] = useState(false),
+    [search, setSearch] = useState(""),
+    [date, setDate] = useState(new Date()),
+    limitRef = useRef(pagination.limit),
+    dispatch = useDispatch();
 
   const recordParams = useMemo(() => {
     const keyword = search ? { search } : {};
@@ -57,6 +60,13 @@ const Attendance = () => {
       }),
     );
   }, [dispatch, recordParams]);
+
+  const toggleModal = () => setOpenModal(!openModal);
+
+  const handleSelected = useCallback((employee) => {
+    setSelected(employee);
+    toggleModal();
+  }, []);
 
   const setPage = (page) => dispatch(RECORDS({ ...recordParams, page }));
   const setLimit = (limit) =>
@@ -95,23 +105,11 @@ const Attendance = () => {
                     <TableSkeleton numberOfRows={5} numberOfColumns={5} />
                   ) : collections?.length > 0 ? (
                     collections.map((employee) => (
-                      <TableRow
-                        key={employee.userId}
-                        className="hover:bg-muted/30"
-                      >
-                        <TableCell>
-                          <div className="font-medium">
-                            {Formatter.fullName(employee?.user?.name)}
-                          </div>
-                        </TableCell>
-                        <TableCell>{Formatter.time(employee.timeIn)}</TableCell>
-                        <TableCell className="tabular-nums">
-                          {Formatter.time(employee.timeOut)}
-                        </TableCell>
-                        <TableCell className="font-medium tabular-nums">
-                          {Formatter.duration(employee.totalLoggedMinutes)}
-                        </TableCell>
-                      </TableRow>
+                      <Employee
+                        employee={employee}
+                        key={employee?.userId}
+                        handleSelected={handleSelected}
+                      />
                     ))
                   ) : (
                     <TableRow>
@@ -132,6 +130,11 @@ const Attendance = () => {
           </CardContent>
         </Card>
       </div>
+      <CustomModal
+        isOpen={openModal}
+        setIsOpen={setOpenModal}
+        selected={selected}
+      />
     </main>
   );
 };

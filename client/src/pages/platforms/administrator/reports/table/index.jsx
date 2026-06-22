@@ -25,13 +25,13 @@ const TableRecords = ({ params, reportType = "Daily" }) => {
   const setPage = (page) => {
     if (!params) return;
 
-    dispatch(RECORDS({ ...requestParams, page }));
+    dispatch(RECORDS({ ...params, page }));
   };
 
   const setLimit = (limit) => {
     if (!params) return;
 
-    dispatch(RECORDS({ ...requestParams, page: 1, limit }));
+    dispatch(RECORDS({ ...params, page: 1, limit }));
   };
 
   return (

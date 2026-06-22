@@ -4,6 +4,7 @@ import capitalize from "./capitalize";
 import time from "./time";
 import duration from "./duration";
 import toJSDate from "./toJSDate";
+import scheduleTime from "./scheduleTime";
 const Formatter = {
   date,
   fullName,
@@ -11,6 +12,7 @@ const Formatter = {
   time,
   duration,
   toJSDate,
+  scheduleTime,
 };
 
 export default Formatter;

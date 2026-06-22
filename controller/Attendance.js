@@ -418,13 +418,12 @@ exports.records = async (req, res) => {
       userMap = new Map(
         usersSnapshot.docs.map((doc) => {
           const user = doc.data();
-
+          const { role, ...rest } = user;
           return [
             user.uid,
             {
               uid: user.uid,
-              name: user.name,
-              email: user.email,
+              ...rest,
             },
           ];
         }),
