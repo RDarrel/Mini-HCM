@@ -46,10 +46,10 @@ const EmployeeModal = ({ isOpen, setIsOpen, selected: employee = {} }) => {
   );
 
   const schedule = employee?.user?.schedule || {};
-  const scheduleTimeIn = schedule?.timeIn || schedule?.start || undefined;
-  const timeInMaxTime = schedule?.timeOut || schedule?.end || undefined;
-  const timeOutMinTime =
-    form.timeOutDate === workDate ? scheduleTimeIn : undefined;
+  const scheduleTimeIn = schedule?.timeIn || schedule?.start;
+  const timeInMaxTime = schedule?.timeOut || schedule?.end;
+  const isSameDayTimeout = form.timeOutDate === workDate;
+  const timeOutMinTime = isSameDayTimeout ? scheduleTimeIn : undefined;
 
   // Prefill form from the selected attendance record when modal opens.
   useEffect(() => {
