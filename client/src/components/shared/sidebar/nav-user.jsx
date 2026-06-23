@@ -33,7 +33,11 @@ export function NavUser() {
   const handleLogout = () => {
     dispatch(LOGOUT())
       .unwrap()
-      .then(() => navigate("/"))
+      .then(() => {
+        navigate("/");
+        // Workaround for mobile sidebar overlay leaving body interactions disabled
+        document.body.style.pointerEvents = "";
+      })
       .catch((error) => toast.error(error));
   };
 
