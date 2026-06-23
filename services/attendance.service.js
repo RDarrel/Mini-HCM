@@ -148,15 +148,3 @@ exports.punch = async ({ userId, punchType, schedule, timezone }) => {
     punchType,
   };
 };
-
-// Get a daily summary record by ID.
-exports.getSummaryById = async (attendanceId) => {
-  const doc = await db.collection("dailySummary").doc(attendanceId).get();
-
-  return doc.exists
-    ? {
-        id: doc.id,
-        ...doc.data(),
-      }
-    : null;
-};
