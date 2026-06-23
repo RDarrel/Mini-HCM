@@ -49,10 +49,9 @@ exports.todayRecord = async (req, res) => {
   try {
     const { uid: userId, schedule, timezone } = req.user;
     const now = new Date();
-
     const workDate = getWorkDate(now, schedule, timezone);
     const snapshot = await db
-      .collection("attendance")
+      .collection("dailySummary")
       .where("userId", "==", userId)
       .where("workDate", "==", workDate)
       .limit(1)
@@ -67,14 +66,11 @@ exports.todayRecord = async (req, res) => {
       });
     }
 
-    const summary = await attendanceService.getSummaryById(doc.id);
-
     res.json({
       message: "Today record fetched successfully",
       data: {
         id: doc.id,
         ...doc.data(),
-        ...summary,
       },
     });
   } catch (error) {
