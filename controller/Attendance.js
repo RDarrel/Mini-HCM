@@ -44,7 +44,7 @@ exports.myHistory = async (req, res) => {
   }
 };
 
-// Returns today's attendance record along with its computed summary if available.
+// Returns today's attendance record.
 exports.todayRecord = async (req, res) => {
   try {
     const { uid: userId, schedule, timezone } = req.user;
