@@ -58,26 +58,23 @@ exports.todayRecord = async (req, res) => {
       .limit(1)
       .get();
 
-    let doc = snapshot.docs[0];
-
     // Fallback: check for an active in-progress shift.
-    if (!doc) {
+    if (snapshot.empty) {
       snapshot = await db
         .collection("dailySummary")
         .where("userId", "==", userId)
         .where("status", "==", "in_progress")
         .limit(1)
         .get();
-
-      doc = snapshot.docs[0];
     }
 
-    if (!doc) {
+    if (snapshot.empty) {
       return res.json({
         message: "Today record fetched successfully",
         data: null,
       });
     }
+    let doc = snapshot?.docs[0];
 
     return res.json({
       message: "Today record fetched successfully",
