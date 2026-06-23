@@ -48,16 +48,29 @@ exports.myHistory = async (req, res) => {
 exports.todayRecord = async (req, res) => {
   try {
     const { uid: userId, schedule, timezone } = req.user;
-    const now = new Date();
-    const workDate = getWorkDate(now, schedule, timezone);
-    const snapshot = await db
+
+    const workDate = getWorkDate(new Date(), schedule, timezone);
+
+    let snapshot = await db
       .collection("dailySummary")
       .where("userId", "==", userId)
       .where("workDate", "==", workDate)
       .limit(1)
       .get();
 
-    const doc = snapshot.docs[0] || null;
+    let doc = snapshot.docs[0];
+
+    // Fallback: check for an active in-progress shift.
+    if (!doc) {
+      snapshot = await db
+        .collection("dailySummary")
+        .where("userId", "==", userId)
+        .where("status", "==", "in_progress")
+        .limit(1)
+        .get();
+
+      doc = snapshot.docs[0];
+    }
 
     if (!doc) {
       return res.json({
@@ -66,7 +79,7 @@ exports.todayRecord = async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       message: "Today record fetched successfully",
       data: {
         id: doc.id,
@@ -74,7 +87,7 @@ exports.todayRecord = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       error: error.message,
     });
   }
